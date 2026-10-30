@@ -58,7 +58,7 @@ document.querySelector('#run').onclick = async () => {
     await register('donor');
     check(doc.querySelector('#entrance-new-project').hidden, 'Donor registration enters donor mode without upload permission');
     await until(() => doc.querySelectorAll('.ss-map-marker').length === 4, 'donor sponsor stars');
-    check(doc.querySelector('.ss-widget') && !doc.querySelector('.ss-panel').classList.contains('is-open'), 'Donor sees the quiet Sponsor Stars control linked to real destinations');
+    check(doc.querySelector('.ss-widget') && doc.querySelector('.ss-panel').classList.contains('is-open') === win.matchMedia('(min-width: 901px)').matches, 'Donor sees Sponsor Stars with controls expanded on desktop and folded on smaller screens');
     doc.querySelector('[data-account-close]').click();
     doc.querySelector('.ss-map-marker[data-project-id="tulou"]').click();
     await until(() => doc.querySelector('#destination-gallery').open, 'sponsor destination gallery');

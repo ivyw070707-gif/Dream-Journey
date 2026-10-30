@@ -13,7 +13,7 @@ document.querySelector('#run').onclick = async () => {
     let doc = frame.contentDocument, win = frame.contentWindow;
     await until(() => doc.querySelector('.globe')?.dataset.ready, 'Map startup');
     check(win.getComputedStyle(doc.querySelector('header')).display === 'none', 'Homepage hides navigation, branding and language controls');
-    check(doc.querySelectorAll('#app > section').length === 1 && doc.querySelector('.entrance-title').textContent === '去远方', 'Homepage contains only the title and map section');
+    check(doc.querySelectorAll('#app > section').length === 1 && doc.querySelector('.entrance-title').textContent === 'ToFar' && doc.querySelector('.entrance-tagline').textContent === 'Not too far, to far', 'Homepage contains the ToFar wordmark, tagline and map section');
     check(!doc.querySelector('.archive,.atlas-coda,.question-panel,footer'), 'No poster archive, project text, story or footer on first screen');
     check(doc.querySelectorAll('.globe-marker').length === 4, 'Four unique destinations remain on the map');
     check(!doc.querySelector('#destination-gallery').open, 'Poster gallery is closed on arrival');

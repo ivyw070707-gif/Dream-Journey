@@ -1,5 +1,6 @@
 import {emptyDraft, normalizeDraft, allowedFileRoles, isModel, textFields} from '../src/js/project-schema.js';
 import {HttpError, extractSources} from './files.js';
+import {preferImportedCover} from './imported-assets.js';
 
 const example = {project: emptyDraft(), fileRoles: [{id: 'source-file-id', role: 'reference', caption: {zh: '', en: ''}}], evidence: [{field: 'title', source: 'source-file-id', quote: 'exact source quote'}], warnings: []};
 const instructions = `You organize authentic student study journeys for the Dream Journey atlas.
@@ -43,5 +44,5 @@ export async function analyzeProject({files, notes = '', apiKey, model = 'deepse
   const evidence = (Array.isArray(result.evidence) ? result.evidence : []).filter(item => item && fields.has(item.field) && validIds.has(item.source) && typeof item.quote === 'string' && item.quote.trim()).slice(0, 60).map(({field, source, quote}) => ({field, source, quote: quote.slice(0, 1200)}));
   const roles = (Array.isArray(result.fileRoles) ? result.fileRoles : []).filter(item => item && originalIds.has(item.id) && allowedFileRoles(files.find(file => file.id === item.id)).includes(item.role)).map(item => ({id: item.id, role: item.role, caption: {zh: typeof item.caption?.zh === 'string' ? item.caption.zh.slice(0, 1000) : '', en: typeof item.caption?.en === 'string' ? item.caption.en.slice(0, 1000) : ''}}));
   const warnings = [...sources.warnings, ...(Array.isArray(result.warnings) ? result.warnings.filter(value => typeof value === 'string').slice(0, 20).map(value => value.slice(0, 1000)) : [])];
-  return {project: result.project, fileRoles: roles, evidence, warnings, sourceFiles: manifest, model};
+  return {project: result.project, fileRoles: preferImportedCover(files, roles), evidence, warnings, sourceFiles: manifest, model};
 }

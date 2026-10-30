@@ -80,7 +80,7 @@ async function mountSponsorStars(host) {
     onSelect: project => openDestination(project.index),
     onFund: result => { sponsoredProjectIds = result.fundedProjectIds; }
   });
-  sponsorStars.togglePanel(false);
+  sponsorStars.togglePanel(window.matchMedia('(min-width: 901px)').matches);
 }
 function beginRender() {
   renderId++; cancelRoutePlayback(); destroySponsorStars();
@@ -117,7 +117,7 @@ function globeMarkup() {
 function renderMap() {
   beginRender(); selected = null;
   document.body.classList.add('atlas-only');
-  app.innerHTML = `<section class="atlas atlas-entrance"><h1 class="entrance-title">去远方</h1><div class="map-wrap">${globeMarkup()}</div><div class="entrance-actions"><button id="entrance-archive">${t('journeys')}</button><button data-account class="account-button"></button><button id="entrance-new-project" data-teacher-only hidden>${t('agentOpen')}</button></div></section>`;
+  app.innerHTML = `<section class="atlas atlas-entrance"><div class="entrance-brand" lang="en"><h1 class="entrance-title">ToFar</h1><p class="entrance-tagline">Not too far, to far</p></div><div class="map-wrap">${globeMarkup()}</div><div class="entrance-actions"><button id="entrance-archive">${t('journeys')}</button><button data-account class="account-button"></button><button id="entrance-new-project" data-teacher-only hidden>${t('agentOpen')}</button></div></section>`;
   setNavigation('explore');
   document.querySelector('#entrance-new-project').onclick = openProjectAssistant;
   refreshAccountControls();

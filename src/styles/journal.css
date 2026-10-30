@@ -190,3 +190,74 @@ html[lang="en"] .gallery-editorial h3{font-family:var(--english);font-size:22px;
 html[lang="en"] .atlas-entrance .marker-label{letter-spacing:1px}
 @media(max-width:600px){html[lang="en"] .gallery-editorial h2{font-size:43px;grid-column:1/-1;margin-top:10px}}
 @media(max-width:600px){.ss-widget{left:12px;bottom:12px;width:210px}.ss-panel{max-height:55dvh}}
+
+/* The entrance wordmark follows the atlas's existing serif palette and spacing. */
+.atlas-entrance .entrance-brand{position:absolute;left:7%;top:30%;z-index:3;width:max-content;max-width:29%;color:#4d563a;pointer-events:none}
+.atlas-entrance .entrance-brand .entrance-title{position:static;inset:auto;margin:0;padding:0;text-align:inherit;font:400 clamp(64px,7.2vw,108px)/1.15 var(--english);letter-spacing:.025em;color:inherit}
+.atlas-entrance .entrance-tagline{margin:16px 0 0 28px;text-align:right;font:italic 400 clamp(18px,1.9vw,27px)/1.4 var(--english);letter-spacing:.015em;color:#778164;white-space:nowrap}
+@media(max-width:900px){.atlas-entrance .entrance-brand{top:27%}.atlas-entrance .entrance-brand .entrance-title{font-size:64px}.atlas-entrance .entrance-tagline{font-size:18px;margin-top:12px;margin-left:12px}}
+@media(max-width:600px){.atlas-entrance .entrance-brand{left:7%;right:7%;top:11%;width:auto;max-width:none;text-align:center}.atlas-entrance .entrance-brand .entrance-title{font-size:clamp(54px,10vw,64px)}.atlas-entrance .entrance-tagline{margin:8px 0 0;text-align:center;font-size:18px}}
+
+/* Sponsor cards: a cloth bag of stars, followed by its funding controls. */
+.ss-widget{top:29svh;right:auto;bottom:20px;left:7%;width:clamp(240px,24vw,280px);max-height:none;padding:3px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c4cbb5 transparent;color:var(--ink)}
+.ss-bag-button{flex-direction:column;gap:4px;min-height:210px;padding:17px 18px 19px;border:1px solid #b9c3a7;border-radius:14px;background:radial-gradient(ellipse at 50% 38%,#faf5e3 0%,#f7f4e9 62%,#f0efe2 100%);box-shadow:0 9px 24px #4d563a0b;text-align:center;backdrop-filter:none;transition:border-color .2s,background .2s}
+.ss-bag-button:hover{transform:none;border-color:#899873;background:#faf7ec}
+.ss-bag-button::after{display:block;inset:6px;border:1px solid #d9decb;border-radius:9px}
+.ss-bag-icon{flex:0 0 auto;width:150px;height:136px;margin:0;filter:drop-shadow(0 5px 5px #6d67481a)}
+.ss-bag-icon svg{display:block;width:100%;height:100%;overflow:visible}
+.ss-bag-copy{flex:0 0 auto;align-items:center;gap:4px}
+.ss-bag-copy strong{color:#536042;font:500 20px/1.5 var(--serif);letter-spacing:3px}
+.ss-bag-copy small{color:#97936e;font:11px/1.6 var(--serif);letter-spacing:2px}
+.ss-bag-count{top:14px;right:14px;min-width:43px;height:43px;border-color:#b4bf9c;background:#f7f4e9d9;gap:2px}
+.ss-bag-count b{color:#65734f;font:600 20px/1 var(--english)}
+.ss-bag-count small{color:#8a9279;font:8px/1.2 var(--sans);letter-spacing:0}
+.ss-panel{position:relative;inset:auto;width:100%;max-height:none;margin:10px 0 0;padding:18px 19px 15px;overflow:visible;border:1px solid #c5cdb6;border-radius:12px;background:#f8f5ebeF;box-shadow:0 9px 24px #4d563a08}
+.ss-panel-kicker{align-items:center;margin-bottom:16px;font:10px/1.5 var(--sans);letter-spacing:1px}
+.ss-panel-kicker span:first-child{color:#8b784c;font:500 12px/1.5 var(--serif)}
+.ss-panel-kicker span:last-child{color:#8c947d;font-size:9px;letter-spacing:.5px}
+.ss-amount-row{gap:12px;margin-bottom:10px}
+.ss-amount-label{font:10px/1.6 var(--serif);color:#899278;letter-spacing:1px}
+.ss-amount-value{color:#8c7549;font:500 30px/1.2 var(--english);white-space:nowrap}
+.ss-range{--ss-progress:0%;appearance:none;-webkit-appearance:none;display:block;width:100%;height:6px;margin:14px 0 12px;padding:0;border:0;border-radius:99px;background:linear-gradient(to right,#9eae87 var(--ss-progress),#dedfce var(--ss-progress));accent-color:#94a77d}
+.ss-range::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border:2px solid #f8f5eb;border-radius:50%;background:#94a77d;box-shadow:0 0 0 1px #99a787;cursor:grab}
+.ss-range::-moz-range-thumb{width:14px;height:14px;border:2px solid #f8f5eb;border-radius:50%;background:#94a77d;box-shadow:0 0 0 1px #99a787;cursor:grab}
+.ss-range:focus-visible{outline:1px solid #87996e;outline-offset:6px}
+.ss-range-scale{color:#969c85;font:9px/1.5 var(--sans)}
+.ss-estimate{gap:9px;margin:15px 0;padding:12px 0;border-color:#d5dac7;color:#6e7d59;font:11px/1.6 var(--serif)}
+.ss-estimate i{width:24px;height:24px;border-color:#aab897;color:#899d6c}
+.ss-confirm{border-radius:6px;padding:12px 10px;background:#778763;color:#faf7ed;font:500 13px/1.4 var(--serif);letter-spacing:1px}
+.ss-confirm:hover{background:#657653}
+.ss-status{min-height:0;margin-top:9px;color:#988052;font:10px/1.7 var(--serif)}
+.ss-status:empty{display:none}
+.ss-impact{margin-top:16px;padding-top:14px;border-color:#cbd3ba}
+.ss-impact-title{font:11px/1.7 var(--serif);color:#76875e;letter-spacing:.5px}
+.ss-impact-stat{padding:9px 7px;border-color:#d6dcc8;background:#f0f0e56b}
+.ss-impact-stat b{font:500 24px/1.1 var(--english);color:#5b6d47}
+.ss-impact-stat small{margin-top:5px;color:#919b80;font:9px/1.5 var(--sans)}
+.ss-impact-item{font:10px/1.7 var(--serif);color:#7b8769}
+.ss-impact-item span:first-child{min-width:0;overflow-wrap:anywhere}
+body.atlas-only[data-role="donor"] .entrance-brand{top:7%;}
+body.atlas-only[data-role="donor"] .map-wrap{left:34%;right:0}
+body.gallery-open .ss-widget{visibility:hidden;pointer-events:none}
+@media(max-width:900px){
+  .ss-widget{left:18px;right:auto;top:auto;bottom:18px;width:260px;max-height:calc(100svh - 105px)}
+  .ss-bag-button{flex-direction:row;min-height:82px;padding:10px 13px;gap:10px;text-align:left}
+  .ss-bag-icon{width:62px;height:62px;flex:0 0 62px}
+  .ss-bag-copy{align-items:flex-start;padding-right:31px;gap:3px}
+  .ss-bag-copy strong{font-size:15px;letter-spacing:1px}
+  .ss-bag-copy small{font-size:9px;letter-spacing:.5px}
+  .ss-bag-count{top:10px;right:10px;min-width:32px;height:32px}
+  .ss-bag-count b{font-size:16px}.ss-bag-count small{font-size:6px}
+  .ss-widget.is-open .ss-bag-button{flex-direction:column;min-height:178px;padding:12px}
+  .ss-widget.is-open .ss-bag-icon{width:130px;height:112px;flex:0 0 auto}
+  .ss-widget.is-open .ss-bag-copy{align-items:center;padding-right:0}
+  .ss-widget.is-open .ss-bag-copy strong{font-size:18px}
+  .ss-panel{margin-top:8px}
+  body.atlas-only[data-role="donor"] .entrance-brand{top:11%}
+  body.atlas-only[data-role="donor"] .map-wrap{left:24%;right:0}
+}
+@media(max-width:600px){
+  .ss-widget{left:12px;bottom:12px;width:min(280px,calc(100vw - 24px));max-height:calc(100svh - 90px)}
+  body.atlas-only[data-role="donor"] .map-wrap{left:-9%;right:-9%;top:31%;bottom:19%}
+}
+@media(prefers-reduced-motion:reduce){.ss-panel.is-open,.ss-map-marker.is-funded::after,.ss-flash{animation:none}.ss-bag-button{transition:none}}

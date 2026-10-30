@@ -54,6 +54,13 @@ export const projects = [
       {src: 'assets/documents/tulou-research-timeline.docx', name: '福建土楼研学规划时间线.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', caption: {zh: '从提出问题到完成手抄报的完整研学时间线。', en: 'The complete study timeline from the first question to the final handmade report.'}},
       null, null
     ],
+    model: {
+      src: 'assets/models/tulou-village.glb', name: '土楼手工作品.glb', mime: 'model/gltf-binary',
+      caption: {
+        zh: '土楼手工作品的三维模型，保留四座小圆楼、小桥、河流与庭院摆件。拖动模型可从不同角度观察。',
+        en: 'A 3D reconstruction of the handmade Tulou scene, with four round buildings, a bridge, a river and courtyard details. Drag to explore it from different angles.'
+      }
+    },
     unansweredQuestions: [{zh: '现在还有年轻人愿意住在土楼里吗？', en: 'Do young people still choose to live in Tulou today?'}]
   }),
   journey({
