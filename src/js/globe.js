@@ -1,5 +1,5 @@
 import * as THREE from '../../vendor/three/three.module.min.js';
-import {clampView, DEFAULT_VIEW, latLngPosition, routePositions} from './globe-math.js';
+import {clampView, DEFAULT_VIEW, latLngPosition} from './globe-math.js';
 
 let landData;
 function loadLand() {
@@ -46,11 +46,10 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
   scene.add(earth, new THREE.AmbientLight(0xffffff, 2.1));
   const sunlight = new THREE.DirectionalLight(0xfff5dc, 2.3);
   scene.add(sunlight);
-  const routes = new THREE.Group(); scene.add(routes);
   const vector = point => new THREE.Vector3(...latLngPosition(point));
   const buttons = [...host.querySelectorAll('.globe-marker')];
   const locations = projects.map(p => vector(p.destinationCoords).multiplyScalar(1.012));
-  const offsets = [[-12,13],[-8,14],[-10,-14],[13,-7],[14,10],[-8,-15],[12,-12]];
+  const offsets = [[14,12],[14,-8],[-12,-14],[-12,12]];
   let view = clampView(savedView || DEFAULT_VIEW), disposed = false, frame = 0;
   const events = new AbortController(), pointers = new Map();
   let previous;
@@ -85,27 +84,13 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
   function requestRender() { if (!disposed && !frame) frame = requestAnimationFrame(render); }
   function change(next) { view = clampView({...view, ...next}); requestRender(); }
   function zoom(factor) { change({distance: view.distance * factor}); }
-  function clearRoutes() {
-    while (routes.children.length) {
-      const object = routes.children[0]; routes.remove(object);
-      object.geometry.dispose(); object.material.dispose();
-    }
-  }
   function select(index) {
     active = index;
     buttons.forEach((button, i) => {
       button.classList.toggle('active', i === index);
       button.setAttribute('aria-pressed', String(i === index));
     });
-    clearRoutes();
     const project = projects[index];
-    [0, 0.003].forEach((offset, i) => {
-      const geometry = new THREE.BufferGeometry().setFromPoints(routePositions(project.originCoords, project.destinationCoords, 80, offset).map(p => new THREE.Vector3(...p)));
-      const line = new THREE.Line(geometry, new THREE.LineDashedMaterial({color: project.color, dashSize: 0.008, gapSize: i ? 0.008 : 0.004, transparent: true, opacity: i ? 0.3 : 0.9}));
-      line.computeLineDistances(); routes.add(line);
-    });
-    const origin = new THREE.Mesh(new THREE.SphereGeometry(0.006, 12, 8), new THREE.MeshBasicMaterial({color: project.color}));
-    origin.position.copy(vector(project.originCoords).multiplyScalar(1.013)); routes.add(origin);
     // Keep the newly selected journey in view, even after a close zoom elsewhere.
     change({lat: project.destinationCoords.lat, lng: project.destinationCoords.lng});
   }
@@ -170,7 +155,7 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
     getView: () => ({...view}),
     dispose() {
       disposed = true; cancelAnimationFrame(frame); events.abort(); observer.disconnect();
-      clearRoutes(); sphereGeometry.dispose(); material.map?.dispose(); material.dispose();
+      sphereGeometry.dispose(); material.map?.dispose(); material.dispose();
       renderer.dispose(); renderer.forceContextLoss();
     }
   };

@@ -23,7 +23,7 @@
 .globe-marker[hidden]{display:none}
 .marker-dot{position:absolute;left:8px;top:8px;width:9px;height:9px;background:#5f7153;border:2px solid #f4f1e9;border-radius:50%;box-shadow:0 0 0 3px #f4f1e930}
 .marker-label{position:absolute;left:calc(12px + var(--label-x,12px));top:calc(12px + var(--label-y,0px));font-size:9px;white-space:nowrap;color:#4f6044;letter-spacing:.5px;text-shadow:0 1px 3px var(--paper),0 -1px 3px var(--paper)}
-.globe-marker:nth-child(1) .marker-label,.globe-marker:nth-child(2) .marker-label,.globe-marker:nth-child(3) .marker-label,.globe-marker:nth-child(6) .marker-label{transform:translateX(-100%)}
+.globe-marker:nth-child(3) .marker-label,.globe-marker:nth-child(4) .marker-label{transform:translateX(-100%)}
 .globe-marker.active{z-index:2}
 .globe-marker.active .marker-dot,.globe-marker:hover .marker-dot{background:var(--accent);box-shadow:0 0 0 6px #aa503c20}
 .globe-marker.active .marker-label{color:var(--accent);font-weight:700}
@@ -88,4 +88,43 @@ html[lang="zh-CN"] .eyebrow{letter-spacing:1.6px}
   html[lang="zh-CN"] .section-heading h2{font-size:32px}
   html[lang="zh-CN"] .ending h2{font-size:35px}
   .exhibition .outcome{width:80%}
+}
+
+/* Real covers and empty, clearly labeled content slots. */
+.cover-image{display:block;width:100%;height:auto;object-fit:contain;background:#eeeade;box-shadow:1px 5px 13px #302f2622,0 1px 2px #302f261f}
+.gallery .cover-image{height:308px;padding:7px;border:1px solid #d9d5c6}
+.proposal .cover-image{max-height:500px;background:transparent}
+.viewer-art .cover-image{max-height:72vh;background:transparent;box-shadow:none}
+.placeholder{color:#989d8b;font-weight:400;font-style:normal}
+.status-badge{font-size:9px;color:#8b7966;letter-spacing:.5px}
+.content-slot{border:1px dashed #c8cbbb;border-radius:2px;padding:15px 18px;margin-top:22px;min-height:85px}
+.content-slot>small{display:block;font-size:9px;letter-spacing:1px;color:var(--muted)}
+.content-slot>p{font-size:14px;line-height:1.8;margin:12px 0 2px}
+.content-slot.has-content{border-style:solid}
+.media-slot{min-height:245px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;border:1px dashed #c3c8b6;color:#949b86;background:#dce0d318}
+.media-slot svg{width:65px;height:55px;fill:none;stroke:#aab29b;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.media-slot>span{font-size:11px;letter-spacing:1px}
+.field-spread>.media-slot{min-height:350px}
+.field-note .content-slot{margin-top:22px;min-height:180px}
+.field-note .content-slot p{font-size:14px}
+.outcome .media-slot{min-height:270px;background:#f5f2e855}
+.outcome-image{display:block;width:100%;height:auto;max-height:65vh;object-fit:contain}
+.project-facts{grid-template-columns:1fr 1fr}
+.route-framework .route-stops{grid-template-columns:1fr 1fr}
+.route-framework .route-stops>span:last-child{padding-right:4%;text-align:right}
+.route-framework .route-stops>span:first-child{padding-left:4%}
+.ending h2{font-size:clamp(28px,3.3vw,45px);margin:24px auto;max-width:800px}
+.question-slots{max-width:650px;margin:30px auto!important}
+.question-slots>p{text-align:left;font-size:14px;border-bottom:1px dashed #c9cdbd;padding:16px 20px}
+@media(min-width:1500px){.gallery .cover-image{height:347px}}
+@media(max-width:600px){
+  .gallery .cover-image{height:295px}
+  .content-slot{padding:13px;margin-top:20px}
+  .project-opening h1{font-size:34px}
+  .proposal{width:90%;max-width:340px}
+  .field-spread>.media-slot{min-height:240px}
+  .field-note{padding-top:28px}
+  .outcome .media-slot{min-height:240px}
+  .route-framework .route-stops>span{padding:0!important}
+  html[lang="zh-CN"] .ending h2{font-size:27px}
 }

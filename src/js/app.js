@@ -1,6 +1,5 @@
 import {getProjects, getStages, getStageNotes} from './data.js';
 import {initialLocale, translate} from './i18n.js';
-import {paper as renderPaper, drawing} from './artwork.js';
 import {journeyRoute} from './route.js';
 
 const app = document.querySelector('#app'), dialog = document.querySelector('#viewer');
@@ -11,8 +10,15 @@ let projects = getProjects(language), stages = getStages(language);
 let active = 0, selected = null, globe = null, globeView, cleanup = () => {}, renderId = 0;
 let currentNav = 'explore', viewerState = null;
 const t = key => translate(key, language);
-const paper = (p, i) => renderPaper(p, i, language);
 const number = i => String(i + 1).padStart(2, '0');
+const total = () => String(projects.length).padStart(2, '0');
+const coverImage = (p, loading = 'lazy') => `<img class="cover-image" src="${p.cover}" alt="${p.title}" loading="${loading}">`;
+function contentSlot(label, value = '') {
+  return `<div class="content-slot ${value ? 'has-content' : ''}"><small>${label}</small><p>${value || `<span class="placeholder">${t('pending')}</span>`}</p></div>`;
+}
+function mediaSlot(label) {
+  return `<div class="media-slot"><svg viewBox="0 0 80 65" aria-hidden="true"><path d="M7 10L73 7 76 56 5 59ZM10 51L30 29 43 43 54 30 70 49"/><circle cx="56" cy="21" r="5"/></svg><span>${label}</span></div>`;
+}
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const scrollBehavior = () => reducedMotion() ? 'instant' : 'smooth';
 
@@ -60,11 +66,11 @@ function renderMap() {
   beginRender(); selected = null;
   app.innerHTML = `<section class="atlas"><div class="atlas-heading"><div class="eyebrow"><span class="tiny-star">✳</span> ${t('atlas')}</div><h1>去远方<span class="title-dot">。</span></h1><p>${t('hero')}</p><div class="small-rule"></div><span class="intro-cn">${t('intro')}</span></div>
     <div class="map-wrap">${globeMarkup()}<span class="map-caption">${t('mapCaption')}</span></div>
-    <div class="map-side"><span>01 — 07</span><div class="vertical-text">${t('followQuestion')}</div></div>
+    <div class="map-side"><span>01 — ${total()}</span><div class="vertical-text">${t('followQuestion')}</div></div>
     <div class="question-panel"><span class="eyebrow">${t('firstQuestion')}</span><h2 id="question"></h2><p id="question-meta"></p><button id="enter" class="text-link">${t('followJourney')} <span>↗</span></button></div>
-    <div class="atlas-bottom"><span><i class="red-dot"></i> <b>07</b> ${t('possibilities')}</span><span class="atlas-hint">${t('choosePoint')}</span></div></section>
+    <div class="atlas-bottom"><span><i class="red-dot"></i> <b>${total()}</b> ${t('possibilities')}</span><span class="atlas-hint">${t('choosePoint')}</span></div></section>
     <section class="archive" id="archive"><div class="archive-top"><span class="eyebrow">${t('beginning')}</span><span class="drag-note">← &nbsp; ${t('drag')} &nbsp; →</span><div><button id="prev" aria-label="${t('previous')}">←</button><button id="next" aria-label="${t('next')}">→</button></div></div>
-    <div class="gallery" aria-label="${t('archive')}">${projects.map((p, i) => `<button class="artifact ${i === active ? 'chosen' : ''}" data-i="${i}" aria-label="${p.title}" style="--rot:${[-5,3,-2,4,-4,2,-3][i]}deg"><span class="tape"></span>${paper(p, i)}<span class="artifact-label"><span>${number(i)} / ${p.destination}</span><span>${p.title} ↗</span></span></button>`).join('')}</div>
+    <div class="gallery" aria-label="${t('archive')}">${projects.map((p, i) => `<button class="artifact ${i === active ? 'chosen' : ''}" data-i="${i}" aria-label="${p.title}" style="--rot:${[-5,3,-2,4][i]}deg"><span class="tape"></span>${coverImage(p, i === active ? 'eager' : 'lazy')}<span class="artifact-label"><span>${number(i)} / ${p.destination}</span><span>${p.title} ↗</span></span></button>`).join('')}</div>
     <div class="archive-footer"><span>${t('realBeginnings')}</span><span id="counter"></span><span>${t('paperBeginning')}</span></div></section>
     <footer><span>去远方 / Dream Journey</span><span>${t('disclaimer')}</span><button id="about-footer">${t('about')} ↗</button></footer>`;
   setNavigation(currentNav === 'journeys' ? 'journeys' : 'explore');
@@ -95,9 +101,9 @@ function centerGallery(smooth = true) {
 }
 function updateSelection(scroll = true) {
   const p = projects[active];
-  document.querySelector('#question').textContent = p.researchQuestion;
-  document.querySelector('#question-meta').textContent = `${p.destination} · ${p.theme} · ${p.year}`;
-  document.querySelector('#counter').textContent = `${number(active)} / 07`;
+  document.querySelector('#question').textContent = p.researchQuestion || p.title;
+  document.querySelector('#question-meta').textContent = `${p.destination} · ${t('detailsPending')}`;
+  document.querySelector('#counter').textContent = `${number(active)} / ${total()}`;
   document.querySelectorAll('.artifact').forEach((element, i) => element.classList.toggle('chosen', i === active));
   document.querySelectorAll('.globe-marker').forEach((element, i) => {
     element.classList.toggle('active', i === active); element.setAttribute('aria-pressed', String(i === active));
@@ -154,21 +160,28 @@ function openProject(i) {
 function renderProject() {
   beginRender(); setNavigation('journeys');
   const p = selected;
-  app.innerHTML = `<article class="project"><div class="project-top"><button class="back">← ${t('back')}</button><span class="eyebrow">${t('journey')} ${number(active)} / ${p.destination} · ${p.year}</span><span>${t('fictional')}</span></div>
-    <section class="project-opening"><div><span class="eyebrow">${t('started')}</span><h1>${p.researchQuestion}</h1><p class="student-note">“${p.note}”</p><div class="project-facts"><div><small>${t('explorers')}</small>${p.studentName}</div><div><small>${t('fromTo')}</small>${p.origin} → ${p.destination}</div><div><small>${t('theme')}</small>${p.theme} · ${p.year}</div></div><p class="annotation">${t('annotation')}</p></div><button class="proposal inspect" aria-label="${t('inspect')}"><span class="tape"></span>${paper(p,20)}<span class="inspect-label">${t('original')} &nbsp; ⤢</span></button></section>
+  const photo = p.fieldPhotos[0];
+  const fieldImage = photo ? `<figure><img src="${photo.src}" alt="${photo.alt || ''}" loading="lazy"><figcaption>${photo.caption || ''}</figcaption></figure>` : mediaSlot(t('fieldPhotoPending'));
+  const outcomeKeys = ['report', 'fieldPages', 'futureLetter'];
+  app.innerHTML = `<article class="project"><div class="project-top"><button class="back">← ${t('back')}</button><span class="eyebrow">${t('journey')} ${number(active)} / ${p.destination}</span><span class="status-badge">${t('detailsPending')}</span></div>
+    <section class="project-opening"><div><span class="eyebrow">${t('journeyFile')}</span><h1>${p.title}</h1>
+      ${contentSlot(t('researchQuestion'), p.researchQuestion)}
+      <div class="project-facts"><div><small>${t('explorers')}</small>${p.studentName || '<span class="placeholder">—</span>'}</div><div><small>${t('fromTo')}</small><span class="${p.origin ? '' : 'placeholder'}">${p.origin || t('departurePending')}</span> → ${p.destination}</div><div><small>${t('theme')}</small>${p.theme || '<span class="placeholder">—</span>'}</div><div><small>${t('year')}</small>${p.year || '<span class="placeholder">—</span>'}</div></div>
+      ${contentSlot(t('journeyNote'), p.note)}</div>
+      <button class="proposal inspect" aria-label="${t('inspect')}"><span class="tape"></span>${coverImage(p, 'eager')}<span class="inspect-label">${t('cover')} &nbsp; ⤢</span></button></section>
     <section class="research"><div class="section-heading"><span class="eyebrow">${t('thinking')}</span><h2>${t('thinkingTitle')}</h2><p>${t('thinkingBody')}</p></div><div class="constellation-scroll">${researchConstellation()}</div><div class="constellation-foot"><span>✳ &nbsp; ${t('everyPoint')}</span><span>${t('closer')} ↗</span></div></section>
-    <section class="fieldwork"><div class="section-heading"><span class="eyebrow">${t('fieldwork')}</span><h2>${t('fieldworkTitle')}</h2><p>${t('fieldworkBody')}</p></div>${journeyRoute(p, t)}<div class="field-spread"><figure><img src="assets/images/field.jpg" alt="${t('landscapeAlt')}" loading="lazy"><figcaption>${t('fieldCaption')}<span>${t('illustrativePhoto')}</span></figcaption></figure><div class="field-note"><span class="eyebrow">${t('notebook')}</span><h3>${t('bestPart')}</h3><p>${t('listenStory')}</p><span class="handwriting">${t('lookCloser')}</span><button class="text-link field-inspect">${t('readNote')} ↗</button></div></div></section>
-    <section class="outcomes"><div class="section-heading"><span class="eyebrow">${t('exhibition')}</span><h2>${t('broughtBack')}</h2><p>${t('exhibitionBody')}</p></div><div class="exhibition"><button data-outcome="0" class="outcome tall">${paper(p,30)}<span>01 / ${t('report')} ↗</span></button><button data-outcome="1" class="outcome notebook"><div class="note-sheet"><small>${t('fieldNotes')}</small><h3>${t('placeMore')}</h3><div class="ink-sketch"><svg viewBox="0 0 330 310">${drawing(p)}</svg></div><p>${t('listenFirst')}</p></div><span>02 / ${t('fieldPages')} ↗</span></button><button data-outcome="2" class="outcome small"><div class="reflection"><span>${t('toFuture')}</span><h3>${t('reflection')}</h3><p>— ${p.studentName.split(/ &|和/)[0]}</p></div><span>03 / ${t('futureLetter')} ↗</span></button></div></section>
-    <section class="ending"><span class="tiny-star">✳</span><p>${t('traveled')}</p><h2>${t('cameBack')}</h2><div>${p.unansweredQuestions.map(q => `<p>↗ &nbsp; ${q}</p>`).join('')}</div><button class="continue">${t('continue')} <span>→</span></button></section></article>
+    <section class="fieldwork"><div class="section-heading"><span class="eyebrow">${t('fieldwork')}</span><h2>${t('fieldworkTitle')}</h2><p>${t('fieldworkBody')}</p></div>${journeyRoute(p, t)}<div class="field-spread">${fieldImage}<div class="field-note"><span class="eyebrow">${t('fieldNotes')}</span>${contentSlot(t('fieldNotes'), p.fieldNotes)}<button class="text-link field-inspect">${t('readNote')} ↗</button></div></div></section>
+    <section class="outcomes"><div class="section-heading"><span class="eyebrow">${t('exhibition')}</span><h2>${t('broughtBack')}</h2><p>${t('exhibitionBody')}</p></div><div class="exhibition">${outcomeKeys.map((key, i) => `<button data-outcome="${i}" class="outcome ${['tall','notebook','small'][i]}">${p.finalOutcomes[i]?.src ? `<img class="outcome-image" src="${p.finalOutcomes[i].src}" alt="${t(key)}" loading="lazy">` : mediaSlot(t('outcomePending'))}<span>${number(i)} / ${t(key)} ↗</span></button>`).join('')}</div></section>
+    <section class="ending"><span class="tiny-star">✳</span><h2>${t('furtherQuestions')}</h2><div class="question-slots">${(p.unansweredQuestions.length ? p.unansweredQuestions : ['', '', '']).map(q => `<p class="${q ? '' : 'placeholder'}">↗ &nbsp; ${q || t('questionPending')}</p>`).join('')}</div><button class="continue">${t('continue')} <span>→</span></button></section></article>
     <footer><span>去远方 / Dream Journey</span><span>${t('disclaimer')}</span><button class="back">${t('return')} ↑</button></footer>`;
   document.querySelectorAll('.back,.continue').forEach(element => element.onclick = () => goHome());
-  document.querySelector('.inspect').onclick = () => openViewer({type: 'proposal'});
+  document.querySelector('.inspect').onclick = () => openViewer({type: 'cover'});
   document.querySelectorAll('.star-node').forEach(element => {
     const show = () => openViewer({type: 'stage', index: Number(element.dataset.stage)});
     element.onclick = show;
     element.onkeydown = event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); show(); } };
   });
-  document.querySelector('.field-inspect').onclick = () => openViewer({type: 'stage', index: 10});
+  document.querySelector('.field-inspect').onclick = () => openViewer({type: 'fieldNotes'});
   document.querySelectorAll('[data-outcome]').forEach(element => element.onclick = () => openViewer({type: 'outcome', index: Number(element.dataset.outcome)}));
 }
 
@@ -179,18 +192,27 @@ function openViewer(state) {
 }
 function renderViewer() {
   const state = viewerState, p = selected;
-  let title, html, description;
+  let title, html, description, status = t('pending');
   if (state.type === 'idea') {
-    title = t('ideaTitle'); html = `<div class="context-note"><span class="tiny-star">✳</span><h3>${t('ideaCard')}</h3><p>去远方 / Dream Journey</p></div>`; description = t('ideaBody');
-  } else if (state.type === 'proposal') {
-    title = t('originalQuestion'); html = paper(p,70); description = p.note;
+    title = t('ideaTitle'); html = `<div class="context-note"><span class="tiny-star">✳</span><h3>${t('ideaCard')}</h3><p>去远方 / Dream Journey</p></div>`; description = t('ideaBody'); status = '';
+  } else if (state.type === 'cover') {
+    title = p.title; html = coverImage(p, 'eager'); description = `${t('cover')} · ${p.destination}`; status = t('cover');
   } else if (state.type === 'stage') {
-    title = stages[state.index]; html = `<div class="context-note"><small>${t('researchNote')} / ${number(state.index)}</small><span class="tiny-star">✳</span><h3>${getStageNotes(language, p)[state.index]}</h3><span class="handwriting">${p.studentName} · ${p.year}</span></div>`; description = `${p.researchQuestion} · ${t('illustrativeProcess')}`;
+    title = stages[state.index];
+    const note = getStageNotes(language, p)[state.index];
+    html = `<div class="context-note"><small>${t('researchNote')} / ${number(state.index)}</small><span class="tiny-star">✳</span><h3 class="${note ? '' : 'placeholder'}">${note || t('pending')}</h3></div>`;
+    description = note ? '' : t('pendingBody');
+  } else if (state.type === 'fieldNotes') {
+    title = t('fieldNotes'); html = contentSlot(title, p.fieldNotes); description = p.fieldNotes ? '' : t('pendingBody');
   } else {
-    title = t(['report','fieldPages','futureLetter'][state.index]); html = document.querySelector(`[data-outcome="${state.index}"]`).firstElementChild.outerHTML; description = `“${p.note}” — ${p.studentName}. ${t('artifactDescription')}`;
+    title = t(['report','fieldPages','futureLetter'][state.index]);
+    const outcome = p.finalOutcomes[state.index];
+    html = outcome?.src ? `<img class="outcome-image" src="${outcome.src}" alt="${title}">` : mediaSlot(t('outcomePending'));
+    description = outcome?.caption?.[language] || t('pendingBody');
   }
-  document.querySelector('#viewer-content').innerHTML = `<div class="viewer-art">${html}</div><aside><span class="eyebrow">${t('archiveTitle')}</span><h2 id="viewer-title">${title}</h2><p>${description}</p><small>${t('artifactDisclaimer')}</small></aside>`;
+  document.querySelector('#viewer-content').innerHTML = `<div class="viewer-art">${html}</div><aside><span class="eyebrow">${t('archiveTitle')}</span><h2 id="viewer-title">${title}</h2><p>${description}</p><small>${status}</small></aside>`;
 }
+
 function showIdea() { openViewer({type: 'idea'}); }
 function goHome(section = 'explore') {
   if (dialog.open) dialog.close();

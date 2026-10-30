@@ -15,16 +15,3 @@ export function latLngPosition({lat, lng}, radius = 1) {
   const phi = lat * Math.PI / 180, theta = lng * Math.PI / 180;
   return [radius * Math.cos(phi) * Math.cos(theta), radius * Math.sin(phi), -radius * Math.cos(phi) * Math.sin(theta)];
 }
-
-export function routePositions(origin, destination, count = 80, offset = 0) {
-  const a = latLngPosition(origin), b = latLngPosition(destination);
-  const dot = clamp(a.reduce((sum, v, i) => sum + v * b[i], 0), -1, 1);
-  const angle = Math.acos(dot), sine = Math.sin(angle);
-  return Array.from({length: count + 1}, (_, i) => {
-    const t = i / count;
-    const u = sine < 1e-6 ? 1 - t : Math.sin((1 - t) * angle) / sine;
-    const v = sine < 1e-6 ? t : Math.sin(t * angle) / sine;
-    const radius = 1.009 + Math.sin(t * Math.PI) * (0.025 + offset);
-    return a.map((value, j) => (value * u + b[j] * v) * radius);
-  });
-}
