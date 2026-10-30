@@ -1,0 +1,13 @@
+/* Local Cesium stage. Only project buttons are drawn above it. */
+.globe .atlas-cesium-stage{position:absolute;inset:0;z-index:0;overflow:hidden;background:transparent}
+.globe .atlas-cesium-stage .cesium-viewer,.globe .atlas-cesium-stage .cesium-viewer-cesiumWidgetContainer,.globe .atlas-cesium-stage .cesium-widget{width:100%;height:100%;position:absolute;inset:0}
+.globe .atlas-cesium-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+.globe .atlas-cesium-stage canvas:active{cursor:grabbing}
+.globe .globe-markers{z-index:2}
+.globe .globe-controls{z-index:4}
+.globe .globe-status{z-index:5}
+.globe .cesium-viewer-bottom{left:8px;right:auto;bottom:4px;max-width:calc(100% - 140px);font:8px/1.2 sans-serif;color:#687967;opacity:.65;pointer-events:auto}
+.globe .cesium-credit-textContainer,.globe .cesium-credit-textContainer a{font:8px/1.2 sans-serif;color:#687967!important}
+.globe .cesium-credit-logoContainer img{height:12px;width:auto}
+.globe .cesium-widget-credits{display:flex!important;align-items:center;gap:4px;white-space:normal}
+.globe .cesium-viewer-toolbar,.globe .cesium-viewer-animationContainer,.globe .cesium-viewer-timelineContainer{display:none}

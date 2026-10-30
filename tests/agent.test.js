@@ -7,7 +7,7 @@ import {randomUUID} from 'node:crypto';
 import {createJourneyServer} from '../server/index.js';
 import {validateFiles, extractSources} from '../server/files.js';
 import {emptyDraft} from '../src/js/project-schema.js';
-import {getProjects} from '../src/js/data.js';
+import {localizeProject} from '../src/js/project-schema.js';
 
 const admin = 'test-only-admin-password';
 const textFile = (name = 'journey.txt') => ({id: randomUUID(), name, role: 'reference', data: Buffer.from('项目名称：敦煌石窟研学\n目的地：敦煌\n研究问题：壁画为何褪色？\n年份：2026').toString('base64')});
@@ -18,7 +18,7 @@ async function fixture(t, options = {}) {
   const server = createJourneyServer({...options, env});
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
-  t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(directory, {recursive: true, force: true}); });
+  t.after(async () => { await new Promise(resolve => server.close(resolve)); assert.equal(path.dirname(path.resolve(directory)), path.resolve(os.tmpdir()), 'Cleanup must stay inside the temporary directory'); await rm(directory, {recursive: true, force: true}); });
   const registration = await fetch(`${base}/api/auth/register`, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Journey-Request': '1'}, body: JSON.stringify({name: 'Test teacher', email: `${randomUUID()}@example.test`, password: 'test-account-password', role: 'teacher'})});
   assert.equal(registration.status, 201);
   const cookie = registration.headers.get('set-cookie').split(';')[0], session = await registration.json();
@@ -39,7 +39,7 @@ test('public reads do not need a password, all writes and analysis do', async t 
   assert.equal(calls, 0);
   for (const route of ['/.env', '/server/agent.js', '/storage/projects', '/package.json', '/src/..%2fserver/agent.js', '/src/%2e%2e%2f.env', '/src/%2e%2e%2f.git/config']) assert.equal((await fetch(`${f.base}${route}`)).status, 404, route);
   const html = await (await fetch(f.base)).text();
-  assert.ok(html.includes('id="new-project"'));
+  assert.ok(html.includes('src/js/app.js'), 'The same service serves the current frontend');
   assert.ok(!html.includes('test-key') && !html.includes(admin));
 });
 
@@ -113,7 +113,7 @@ test('published projects survive a new server instance, public media work, refer
   const publicList = await (await fetch(`http://127.0.0.1:${restarted.address().port}/api/projects`)).json();
   assert.equal(publicList.projects.length, 1);
   assert.equal(publicList.projects[0].id, published.id);
-  assert.equal(getProjects('en', publicList.projects).at(-1).title, 'Dunhuang study');
+  assert.equal(localizeProject(publicList.projects.at(-1), 'en').title, 'Dunhuang study');
 });
 
 test('invalid or unsafe uploads and invalid coordinates are rejected before publication', async t => {

@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dream Journey integration checks</title>
+<style>body{margin:24px;background:#eef2e9;color:#334b35;font:14px/1.6 system-ui}button{padding:10px 18px;margin:14px 0}label{display:block}#results{white-space:pre-wrap}.fail{color:#9b3f37}iframe{display:block;width:1200px;height:850px;border:1px solid #aab69f;margin-top:20px}.note{max-width:900px}</style></head>
+<body><h1>账号、上传与发布整合验收</h1><p class="note">仅用于本机 <strong>8767</strong> 端口的独立测试服务。运行会创建临时 example.test 账号与两个明确标记的测试项目，结束时退出登录；不会调用 DeepSeek。请勿指向正式存储目录。</p>
+<label><input type="checkbox" id="temporary-store"> 已确认当前服务使用独立的临时测试数据目录，且没有配置 DeepSeek 密钥</label>
+<button id="run">Run integration checks</button><pre id="results" role="status">Ready.</pre><iframe title="Integrated website under test" src="../"></iframe><script type="module" src="integration-browser.js"></script></body></html>

@@ -10,7 +10,7 @@ async function fixture(t, env = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'journey-auth-test-'));
   const server = createJourneyServer({env: {JOURNEY_DATA_DIR: directory, ...env}});
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(directory, {recursive: true, force: true}); });
+  t.after(async () => { await new Promise(resolve => server.close(resolve)); assert.equal(path.dirname(path.resolve(directory)), path.resolve(tmpdir()), 'Cleanup must stay inside the temporary directory'); await rm(directory, {recursive: true, force: true}); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const post = (route, body = {}, session = {}, headers = {}) => fetch(`${base}${route}`, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Journey-Request': '1', ...(session.cookie ? {Cookie: session.cookie, 'X-CSRF-Token': session.csrfToken} : {}), ...headers}, body: JSON.stringify(body)});
   const register = async (role, email = `${randomUUID()}@example.test`) => {
@@ -62,4 +62,17 @@ test('production cookies are secure and state-changing account requests need the
   assert.ok(teacher.fullCookie.startsWith('__Host-journey-session=') && teacher.fullCookie.includes('; Secure'));
   const rejected = await fetch(`${f.base}/api/auth/register`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({})});
   assert.equal(rejected.status, 403);
+});
+
+test('accounts and sessions survive a new server instance and can sign in again', async t => {
+  const f = await fixture(t), email='persistent-teacher@example.test';
+  const teacher=await f.register('teacher',email);
+  const restarted=createJourneyServer({env:{JOURNEY_DATA_DIR:f.directory}});
+  await new Promise(resolve=>restarted.listen(0,'127.0.0.1',resolve));
+  t.after(()=>new Promise(resolve=>restarted.close(resolve)));
+  const base=`http://127.0.0.1:${restarted.address().port}`;
+  const saved=await (await fetch(`${base}/api/auth/me`,{headers:{Cookie:teacher.cookie}})).json();
+  assert.equal(saved.user.id,teacher.user.id);assert.equal(saved.role,'teacher');
+  const login=await fetch(`${base}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json','X-Journey-Request':'1'},body:JSON.stringify({email,password:'test-password-123'})});
+  assert.equal(login.status,200);assert.equal((await login.json()).user.id,teacher.user.id);
 });

@@ -1,0 +1,74 @@
+{
+  "retrievedOn": "2026-10-30",
+  "scope": "Geographic overview and exploratory labels; not project visits, address geocoding, street maps, navigation, or survey-grade boundaries.",
+  "world": {
+    "file": "world-countries.json",
+    "publisher": "Natural Earth",
+    "dataset": "Admin 0 countries, 1:110m",
+    "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
+    "website": "https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/",
+    "coordinateSystem": "WGS84",
+    "processing": "Original geometry preserved. Cartographic generalization at 1:110m; not suitable for local precision."
+  },
+  "chinaProvinces": {
+    "originalFile": "china-provinces.json",
+    "displayFile": "china-provinces-wgs84.json",
+    "publisher": "Alibaba Cloud DataV.GeoAtlas",
+    "url": "https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json",
+    "featureCount": 35,
+    "notes": "34 province-level features plus special 100000_JD feature. Source administrative vintage not independently confirmed."
+  },
+  "chinaPrefectures": {
+    "originalFile": "china-prefectures.json",
+    "displayFile": "china-prefectures-wgs84.json",
+    "publisher": "Alibaba Cloud DataV.GeoAtlas",
+    "urlPattern": "https://geo.datav.aliyun.com/areas_v3/bound/{provinceAdcode}_full.json",
+    "coverageFile": "prefecture-coverage.json",
+    "featureCount": 475,
+    "availableProvinceCount": 33,
+    "notes": "All 34 province-level endpoints attempted with at most 4 concurrent requests; Taiwan endpoint unavailable. Municipalities, Hong Kong, and Macao provide district-level children; other regions primarily prefecture-level children. Province name/adcode properties added, original geometries preserved in originalFile."
+  },
+  "dataVCoordinateProcessing": {
+    "documentation": "https://help.aliyun.com/zh/datav/datav-7-0/user-guide/map-data-format-1",
+    "sourceConvention": "DataV official documentation describes GCJ-02 as its primary map coordinate system. The downloaded GeoJSON does not embed an independently authoritative CRS declaration.",
+    "displayConversion": "DataV source coordinates interpreted as GCJ-02; separate WGS84-named files apply six iterative inverse-offset steps and round to six decimals. Original files are retained unchanged (except collection provenance / province fields on the merged file).",
+    "precision": "Approximate alignment for geographic visualization only; neither transformation nor source boundaries are survey-grade. Coordinate conversion residual is not evidence of source positional accuracy."
+  },
+  "cities": {
+    "file": "cities.json",
+    "curatedCount": 65,
+    "totalCount": 377,
+    "primarySource": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_populated_places_simple.geojson",
+    "primaryWebsite": "https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-populated-places/",
+    "sourceExcerptFile": "city-source-selection.json",
+    "notes": "First 65 entries are curated Chinese display labels. 64 use Natural Earth geographic city points; Macao uses an explicitly marked approximate overview center. Chinese descriptions and province labels are editorial geographic summaries. The following 312 centers use DataV city-level centers with the documented approximate inverse GCJ-02 transformation. Each new center preserves sourceCoordinates. Coordinates denote overview city/administrative centers, not precise project addresses. No location is claimed as visited."
+  },
+  "chinaDistricts": {
+    "originalFile": "china-districts.json",
+    "displayFile": "china-districts-wgs84.json",
+    "labelsFile": "district-labels.json",
+    "coverageFile": "district-coverage.json",
+    "publisher": "Alibaba Cloud DataV.GeoAtlas",
+    "urlPattern": "https://geo.datav.aliyun.com/areas_v3/bound/{cityAdcode}_full.json",
+    "featureCount": 107,
+    "labelCount": 193,
+    "selectedCityNames": [
+      "成都",
+      "杭州",
+      "拉萨",
+      "西安",
+      "广州",
+      "武汉",
+      "南京",
+      "深圳",
+      "苏州"
+    ],
+    "existingMunicipalityLabels": [
+      "北京",
+      "天津",
+      "上海",
+      "重庆"
+    ],
+    "notes": "District detail is intentionally limited to the selected cities. District labels additionally include Beijing, Tianjin, Shanghai, and Chongqing from the existing province-children collection. Boundaries and centers use the same documented approximate inverse GCJ-02 conversion. This is administrative detail, not streets or building geometry; source administrative vintage not independently confirmed."
+  }
+}

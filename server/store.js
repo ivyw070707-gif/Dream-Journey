@@ -46,14 +46,18 @@ export function projectStore(directory) {
         await writeFile(path.join(staging, 'project.json'), JSON.stringify(project), {flag: 'wx'});
         try { await rename(staging, path.join(root, id)); }
         catch (error) {
-          if (!['EEXIST', 'ENOTEMPTY'].includes(error.code)) throw error;
+          // Windows reports an existing directory as EPERM/EACCES. Only accept a verified committed record.
+          if (!['EEXIST', 'ENOTEMPTY', 'EPERM', 'EACCES'].includes(error.code)) throw error;
           const concurrent = await get(id);
           if (!concurrent) throw error;
           if (concurrent.ownerId !== ownerId) throw new HttpError(409, 'publicationConflict');
           return concurrent;
         }
         return project;
-      } finally { await rm(staging, {recursive: true, force: true}); }
+      } finally {
+        if (path.dirname(path.resolve(staging)) !== root || !/^\.pending-[0-9a-f-]+$/.test(path.basename(staging))) throw new Error('Invalid staging cleanup path');
+        await rm(staging, {recursive: true, force: true});
+      }
     },
     async media(id, filename) {
       if (!validId(id) || !/^[a-zA-Z0-9-]{1,80}\.(pdf|docx|xls|xlsx|ppt|pptx|zip|txt|md|json|png|jpg|jpeg|webp|glb)$/.test(filename)) throw new HttpError(404, 'notFound');

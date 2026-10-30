@@ -113,5 +113,5 @@ export function createJourneyServer({env = process.env, fetchImpl = fetch, extra
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const server = createJourneyServer();
   server.requestTimeout = 180000;
-  server.listen(Number(process.env.PORT) || 8000, process.env.HOST || '127.0.0.1', () => console.log(`Dream Journey: http://${process.env.HOST || '127.0.0.1'}:${server.address().port}`));
+  server.listen(Number(process.env.PORT) || 8765, process.env.HOST || '127.0.0.1', () => console.log(`Dream Journey: http://${process.env.HOST || '127.0.0.1'}:${server.address().port}`));
 }
