@@ -4,6 +4,7 @@ import {landscape} from './landscape.js';
 import {escapeHTML as esc} from './project-schema.js';
 import {loadPublishedProjects} from './project-api.js';
 import {createProjectAgent} from './project-agent.js';
+import {createAccount} from './account.js';
 import {coverImage, contentSlot, outcomeMarkup, renderProjectMarkup} from './project-view.js';
 
 const app = document.querySelector('#app'), dialog = document.querySelector('#viewer');
@@ -41,7 +42,19 @@ function updateHeader() {
   document.querySelector('nav').setAttribute('aria-label', language === 'zh' ? '主导航' : 'Main navigation');
   document.querySelectorAll('.language-switch').forEach(group => group.setAttribute('aria-label', language === 'zh' ? '网站语言' : 'Site language'));
   document.querySelectorAll('[data-language]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.language === language)));
+  refreshAccountControls();
   setNavigation(currentNav);
+}
+
+function refreshAccountControls() {
+  const user = account.getUser();
+  document.body.dataset.role = user?.role || 'visitor';
+  document.querySelectorAll('[data-account]').forEach(button => { button.textContent = user ? `${t(`role_${user.role}`)} · ${user.name}` : t('visitorLogin'); button.onclick = () => account.open(); });
+  document.querySelectorAll('[data-teacher-only]').forEach(button => { button.hidden = user?.role !== 'teacher'; });
+}
+function openProjectAssistant() {
+  if (account.getUser()?.role === 'teacher') projectAgent.open();
+  else account.open({purpose: 'upload', afterLogin: () => projectAgent.open()});
 }
 
 function beginRender() {
@@ -63,9 +76,10 @@ function globeMarkup() {
 function renderMap() {
   beginRender(); selected = null;
   document.body.classList.add('atlas-only');
-  app.innerHTML = `<section class="atlas atlas-entrance"><h1 class="entrance-title">去远方</h1><div class="map-wrap">${globeMarkup()}</div><div class="entrance-actions"><button id="entrance-archive">${t('journeys')}</button><button id="entrance-new-project">${t('agentOpen')}</button></div></section>`;
+  app.innerHTML = `<section class="atlas atlas-entrance"><h1 class="entrance-title">去远方</h1><div class="map-wrap">${globeMarkup()}</div><div class="entrance-actions"><button id="entrance-archive">${t('journeys')}</button><button data-account class="account-button"></button><button id="entrance-new-project" data-teacher-only hidden>${t('agentOpen')}</button></div></section>`;
   setNavigation('explore');
-  document.querySelector('#entrance-new-project').onclick = () => projectAgent.open();
+  document.querySelector('#entrance-new-project').onclick = openProjectAssistant;
+  refreshAccountControls();
   document.querySelector('#entrance-archive').onclick = () => openArchive();
   const thisRender = renderId, host = document.querySelector('.globe');
   let flatObserver;
@@ -240,7 +254,7 @@ function switchLanguage(nextLanguage) {
   if (selected) { selected = projects[active]; renderProject(); } else renderMap();
   if (galleryDestination && !selected) renderDestinationGallery();
   if (viewerState) renderViewer();
-  projectAgent.refreshLocale();
+  projectAgent.refreshLocale(); account.refreshLocale();
   setNavigation(currentNav);
   window.scrollTo({top: scrollY, behavior: 'instant'});
 }
@@ -257,7 +271,9 @@ const projectAgent = createProjectAgent({getLanguage: () => language, t, onPubli
   projects = getProjects(language, publishedProjects);
   openProject(projects.findIndex(record => record.id === project.id));
 }});
-document.querySelector('#new-project').onclick = () => projectAgent.open();
+let lastAccountId;
+const account = createAccount({t, onChange: user => { if (lastAccountId && lastAccountId !== user?.id) projectAgent.clear(); lastAccountId = user?.id; refreshAccountControls(); }});
+document.querySelector('#new-project').onclick = openProjectAssistant;
 document.querySelectorAll('[data-language]').forEach(button => button.onclick = () => switchLanguage(button.dataset.language));
 function init() {
   if (dialog.open) dialog.close(); viewerState = null;
@@ -277,7 +293,7 @@ window.addEventListener('hashchange', () => {
   const expected = selected ? `#journey/${selected.id}` : galleryDestination === '*' ? '#journeys' : galleryDestination ? `#gallery/${galleryDestination}` : '#explore';
   if (location.hash !== expected) init();
 });
-updateHeader(); init();
+updateHeader(); init(); account.refresh();
 loadPublishedProjects().then(records => {
   const currentId = selected?.id || projects[active]?.id;
   publishedProjects = [...new Map([...records, ...publishedProjects].map(project => [project.id, project])).values()];

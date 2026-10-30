@@ -3,7 +3,7 @@ export const fileRoles = ['reference', 'cover', 'field', 'report', 'notebook', '
 export const MAX_FILE_BYTES = 8 * 1024 * 1024;
 export const MAX_TOTAL_BYTES = 20 * 1024 * 1024;
 export const MAX_FILES = 10;
-export const extensions = ['pdf', 'docx', 'txt', 'md', 'json', 'png', 'jpg', 'jpeg', 'webp', 'glb'];
+export const extensions = ['pdf', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'txt', 'md', 'json', 'png', 'jpg', 'jpeg', 'webp', 'glb'];
 export const imageExtensions = ['png', 'jpg', 'jpeg', 'webp'];
 export const extension = name => String(name).split('.').pop().toLowerCase();
 export const isImage = file => imageExtensions.includes(extension(file.name));

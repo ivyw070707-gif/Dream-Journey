@@ -4,15 +4,15 @@ import {apiRequest, resolveProjectMedia} from './project-api.js';
 
 export function createProjectAgent({getLanguage, t, onPublished}) {
   const dialog = document.querySelector('#project-agent');
-  let files = [], draft = emptyDraft(), notes = '', token = '', busy = '', status = null, message = '', error = '', warnings = [], evidence = [], controller, idempotencyKey = crypto.randomUUID();
+  let files = [], draft = emptyDraft(), notes = '', sourceFiles = [], busy = '', status = null, message = '', error = '', warnings = [], evidence = [], controller, idempotencyKey = crypto.randomUUID();
   let editLanguage = getLanguage();
-  const sourceName = id => files.find(file => file.id === id)?.name || id;
+  const sourceName = id => sourceFiles.find(file => file.id === id)?.name || files.find(file => file.id === id)?.name || id;
   const localized = text => text?.[editLanguage] || '';
   const fileBody = file => ({id: file.id, name: file.name, data: file.data, role: file.role, caption: file.caption});
   const fieldLabel = field => t({title: 'agentProjectTitle', destination: 'destination', studentName: 'explorers', origin: 'home', theme: 'theme', year: 'year', researchQuestion: 'researchQuestion', note: 'journeyNote', transport: 'agentTransport', fieldNotes: 'fieldNotes', researchNotes: 'thinkingTitle', unansweredQuestions: 'furtherQuestions', destinationCoords: 'agentCoordinates'}[field] || 'agentSource');
   const errText = code => t(agentErrorKeys[`agentError_${code}`] || 'agentError_serverError');
   // Known server codes map to localized messages; upstream error bodies never enter the page.
-  const agentErrorKeys = Object.fromEntries(['invalidProject', 'invalidYear', 'invalidCoordinates', 'titleRequired', 'destinationRequired', 'fileCount', 'fileType', 'invalidFile', 'fileSize', 'textEncoding', 'imageRequired', 'invalidModel', 'modelResources', 'unreadableFile', 'emptyFiles', 'agentTimeout', 'agentUnavailable', 'agentBusy', 'invalidAgentResponse', 'adminNotConfigured', 'unauthorized', 'agentNotConfigured', 'duplicateRole', 'connectionError', 'serverError', 'originNotAllowed', 'invalidRequest'].map(code => [`agentError_${code}`, `agentError_${code}`]));
+  const agentErrorKeys = Object.fromEntries(['invalidProject', 'invalidYear', 'invalidCoordinates', 'titleRequired', 'destinationRequired', 'fileCount', 'fileType', 'invalidFile', 'fileSize', 'textEncoding', 'imageRequired', 'invalidModel', 'modelResources', 'invalidArchive', 'archiveLimit', 'archiveEmpty', 'archiveUploadLimit', 'loginRequired', 'teacherRequired', 'invalidCSRF', 'publicationConflict', 'unreadableFile', 'emptyFiles', 'agentTimeout', 'agentUnavailable', 'agentBusy', 'invalidAgentResponse', 'adminNotConfigured', 'unauthorized', 'agentNotConfigured', 'duplicateRole', 'connectionError', 'serverError', 'originNotAllowed', 'invalidRequest'].map(code => [`agentError_${code}`, `agentError_${code}`]));
 
   function input(field, multiline = false) {
     return `<label class="agent-field ${multiline ? 'agent-wide' : ''}"><span>${esc(fieldLabel(field))}${['title', 'destination'].includes(field) ? ' *' : ''}</span>${multiline ? `<textarea rows="3" data-field="${field}" maxlength="12000">${esc(localized(draft[field]))}</textarea>` : `<input data-field="${field}" value="${esc(localized(draft[field]))}" maxlength="12000">`}</label>`;
@@ -23,10 +23,9 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
   function render() {
     dialog.innerHTML = `<div class="agent-heading"><div><span class="eyebrow">DREAM JOURNEY / DEEPSEEK</span><h2 id="agent-title">${t('agentTitle')}</h2><p>${t('agentIntro')}</p></div><button class="agent-close" type="button" aria-label="${t('agentClose')}" ${busy === 'publishing' ? 'disabled' : ''}>×</button></div>
       <ol class="agent-steps"><li class="${files.length ? 'complete' : 'current'}"><b>01</b>${t('agentStepUpload')}</li><li class="${message === 'agentAnalyzed' ? 'complete' : 'current'}"><b>02</b>${t('agentStepReview')}</li><li><b>03</b>${t('agentStepPublish')}</li></ol>
-      <p class="agent-connection ${status?.analysis ? 'ready' : ''}" role="status">${t(status === null ? 'agentConnecting' : status.error ? 'agentOffline' : !status.publishing ? 'agentSetupAdmin' : !status.analysis ? 'agentSetupModel' : 'agentReady')}</p>
+      <p class="agent-connection ${status?.analysis ? 'ready' : ''}" role="status">${t(status === null ? 'agentConnecting' : status.error ? 'agentOffline' : !status.publishing ? 'teacherLoginRequired' : !status.analysis ? 'agentSetupModel' : 'agentReady')}</p>
       <div class="agent-workspace" aria-busy="${Boolean(busy)}"><section class="agent-upload"><h3>${t('agentUploadHeading')}</h3><label class="agent-dropzone" tabindex="0"><span class="agent-upload-symbol" aria-hidden="true">↥</span><strong>${t('agentDrop')}</strong><span>${t('agentFormats')}</span><small>${t('agentLimits')}</small><input id="agent-files" type="file" multiple accept="${extensions.map(ext => `.${ext}`).join(',')}" class="sr-only" ${busy ? 'disabled' : ''}></label><p class="agent-muted agent-model-hint">${t('agentModelHint')}</p><ul class="agent-files">${renderFiles()}</ul>
       <label class="agent-field"><span>${t('agentContext')}</span><textarea id="agent-context" rows="3" maxlength="5000" placeholder="${t('agentContextPlaceholder')}">${esc(notes)}</textarea></label>
-      <label class="agent-field"><span>${t('agentPassword')}</span><input id="agent-token" type="password" autocomplete="off" value="${esc(token)}" placeholder="${t('agentPasswordPlaceholder')}"></label><small class="agent-muted">${t('agentPasswordNote')}</small>
       <button class="agent-primary agent-analyze" type="button" ${busy || !files.some(file => !isModel(file)) || !status?.analysis ? 'disabled' : ''}>✳ &nbsp; ${t(busy === 'analyzing' ? 'agentAnalyzing' : 'agentAnalyze')}</button><p class="agent-muted">${t('agentPrivacy')}</p></section>
       <section class="agent-review"><div class="agent-review-heading"><h3>${t('agentReviewHeading')}</h3><div class="agent-languages" role="group" aria-label="${t('agentEditLanguage')}"><button data-edit-language="zh" type="button" aria-pressed="${editLanguage === 'zh'}">中文</button><button data-edit-language="en" type="button" aria-pressed="${editLanguage === 'en'}">English</button></div></div><p class="agent-muted">${t('agentReviewHint')}</p>
       <form id="agent-form"><fieldset ${busy ? 'disabled' : ''}><div class="agent-grid">${input('title')}${input('destination')}${input('studentName')}${input('theme')}${input('origin')}${input('transport')}
@@ -35,7 +34,7 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
       ${input('researchQuestion', true)}${input('note', true)}${input('fieldNotes', true)}</div>
       <details class="agent-detail"><summary>${t('agentResearchStages')}</summary>${t('agentStagesHint')}<div class="agent-stage-fields">${t('agentStageNames').split('|').map((name, i) => `<label class="agent-field"><span>${String(i + 1).padStart(2, '0')} / ${name}</span><textarea data-stage-input="${i}" rows="2" maxlength="12000">${esc(localized(draft.researchNotes[i]))}</textarea></label>`).join('')}</div></details>
       <label class="agent-field"><span>${t('furtherQuestions')} · ${t('agentOnePerLine')}</span><textarea id="agent-questions" rows="3" maxlength="12000">${esc(draft.unansweredQuestions.map(localized).join('\n'))}</textarea></label></fieldset></form>
-      <div class="agent-warnings">${warnings.length ? `<strong>${t('agentWarnings')}</strong><ul>${warnings.map(warning => `<li>${esc(warning)}</li>`).join('')}</ul>` : ''}</div>
+      ${sourceFiles.length ? `<details class="agent-detail"><summary>${t('agentParsedFiles')} (${sourceFiles.length})</summary><ul>${sourceFiles.map(file => `<li>${esc(file.name)}</li>`).join('')}</ul></details>` : ''}<div class="agent-warnings">${warnings.length ? `<strong>${t('agentWarnings')}</strong><ul>${warnings.map(warning => `<li>${esc(warning)}</li>`).join('')}</ul>` : ''}</div>
       ${evidence.length ? `<details class="agent-detail"><summary>${t('agentEvidence')} (${evidence.length})</summary>${evidence.map(item => `<blockquote><small>${esc(fieldLabel(item.field))} · ${esc(sourceName(item.source))}</small><p>${esc(item.quote)}</p></blockquote>`).join('')}</details>` : ''}
       </section></div><div class="agent-feedback" role="status" aria-live="polite">${error ? `<p class="agent-error" role="alert">${esc(errText(error))}</p>` : message ? `<p>${t(message)}</p>` : ''}</div>
       <div class="agent-footer"><p>${t('agentPublicNote')}</p><button class="agent-secondary agent-reset" type="button" ${busy ? 'disabled' : ''}>${t('agentReset')}</button><button class="agent-primary agent-publish" type="submit" form="agent-form" ${busy || !status?.publishing ? 'disabled' : ''}>${t(busy === 'publishing' ? 'agentPublishing' : 'agentPublish')} ↗</button></div>`;
@@ -52,11 +51,20 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
     busy = 'reading'; render();
     try {
       for (const file of incoming) {
+        if (extension(file.name) === 'zip') {
+          const encoded = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; reader.readAsDataURL(file); });
+          const expanded = await apiRequest('api/files/expand', {body: {files: [{id: crypto.randomUUID(), name: file.name, role: 'reference', data: encoded}]}});
+          if (files.length + expanded.files.length > MAX_FILES || [...files, ...expanded.files].reduce((sum, item) => sum + item.size, 0) > MAX_TOTAL_BYTES) throw new Error('archiveUploadLimit');
+          files.push(...expanded.files.map(item => ({...item, preview: isImage(item) ? `data:${item.mime};base64,${item.data}` : '', role: isImage(item) ? 'field' : 'reference', caption: {zh: '', en: ''}})));
+          if (!files.some(item => item.role === 'cover')) { const first = files.find(isImage); if (first) first.role = 'cover'; }
+          warnings.push(...(expanded.warnings || []));
+          continue;
+        }
         if (isModel(file)) inspectGLB(new Uint8Array(await file.arrayBuffer()));
         const dataURL = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
         files.push({id: crypto.randomUUID(), name: file.name, size: file.size, data: dataURL.split(',')[1], preview: isImage(file) ? URL.createObjectURL(file) : '', role: isModel(file) ? 'model' : isImage(file) ? files.some(item => item.role === 'cover') ? 'field' : 'cover' : 'reference', caption: {zh: '', en: ''}});
       }
-    } catch (err) { error = ['invalidModel', 'modelResources'].includes(err.message) ? err.message : 'invalidFile'; }
+    } catch (err) { error = ['invalidModel', 'modelResources', 'invalidArchive', 'archiveLimit', 'archiveEmpty', 'archiveUploadLimit', 'loginRequired', 'teacherRequired', 'invalidCSRF'].includes(err.message) ? err.message : 'invalidFile'; }
     finally { busy = ''; render(); }
   }
   function bind() {
@@ -68,7 +76,6 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
     drop.ondragleave = () => drop.classList.remove('dragover');
     drop.ondrop = event => { event.preventDefault(); addFiles(event.dataTransfer.files); };
     dialog.querySelector('#agent-context').oninput = event => { notes = event.target.value; };
-    dialog.querySelector('#agent-token').oninput = event => { token = event.target.value; };
     for (const element of dialog.querySelectorAll('[data-field]')) element.oninput = () => { draft[element.dataset.field][editLanguage] = element.value; };
     for (const element of dialog.querySelectorAll('[data-stage-input]')) element.oninput = () => { const index = Number(element.dataset.stageInput); draft.researchNotes[index] ??= {zh: '', en: ''}; draft.researchNotes[index][editLanguage] = element.value; };
     dialog.querySelector('#agent-year').oninput = event => { draft.year = event.target.value === '' ? null : Number(event.target.value); };
@@ -102,11 +109,10 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
   function showError(code) { error = code; render(); dialog.querySelector('.agent-feedback').scrollIntoView({block: 'nearest'}); }
   async function analyze() {
     if (busy) return;
-    if (!token.trim()) { showError('unauthorized'); dialog.querySelector('#agent-token').focus(); return; }
     busy = 'analyzing'; error = ''; message = 'agentAnalyzing'; controller = new AbortController(); render();
     try {
-      const result = await apiRequest('api/agent/analyze', {token, signal: controller.signal, body: {files: files.filter(file => !isModel(file)).map(fileBody), notes}});
-      draft = normalizeDraft(result.project); warnings = result.warnings || []; evidence = result.evidence || [];
+      const result = await apiRequest('api/agent/analyze', {signal: controller.signal, body: {files: files.filter(file => !isModel(file)).map(fileBody), notes}});
+      draft = normalizeDraft(result.project); sourceFiles = result.sourceFiles || []; warnings = result.warnings || []; evidence = result.evidence || [];
       const used = new Set();
       for (const suggestion of result.fileRoles || []) {
         const file = files.find(item => item.id === suggestion.id);
@@ -125,10 +131,9 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
   async function publish(event) {
     event.preventDefault(); if (busy) return;
     try { draft = validateDraft(draft); } catch (err) { showError(err.message); return; }
-    if (!token.trim()) { showError('unauthorized'); dialog.querySelector('#agent-token').focus(); return; }
     busy = 'publishing'; error = ''; message = 'agentPublishing'; render();
     try {
-      const result = await apiRequest('api/projects', {token, body: {idempotencyKey, project: draft, files: files.map(fileBody)}});
+      const result = await apiRequest('api/projects', {body: {idempotencyKey, project: draft, files: files.map(fileBody)}});
       if (!result.project?.id) throw new Error('serverError');
       const published = resolveProjectMedia(result.project);
       busy = ''; dialog.close(); reset(); onPublished(published);
@@ -136,10 +141,10 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
   }
   function reset() {
     for (const file of files) if (file.preview) URL.revokeObjectURL(file.preview);
-    files = []; draft = emptyDraft(); notes = ''; warnings = []; evidence = []; error = ''; message = ''; idempotencyKey = crypto.randomUUID(); render();
+    files = []; draft = emptyDraft(); notes = ''; warnings = []; evidence = []; sourceFiles = []; error = ''; message = ''; idempotencyKey = crypto.randomUUID(); render();
   }
   dialog.addEventListener('cancel', event => { if (busy === 'publishing') event.preventDefault(); });
-  dialog.addEventListener('close', () => { if (busy === 'analyzing') controller?.abort(); token = ''; });
+  dialog.addEventListener('close', () => { if (busy === 'analyzing') controller?.abort(); });
   return {
     async open() {
       if (dialog.open) return;
@@ -147,6 +152,7 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
       try { status = await apiRequest('api/agent/status'); } catch { status = {error: true}; }
       render();
     },
-    refreshLocale() { if (dialog.open) render(); }
+    refreshLocale() { if (dialog.open) render(); },
+    clear() { controller?.abort(); if (dialog.open) dialog.close(); busy = ''; reset(); }
   };
 }

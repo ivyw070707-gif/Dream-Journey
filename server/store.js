@@ -18,17 +18,17 @@ export function projectStore(directory) {
       const records = await Promise.all(entries.filter(validId).map(get));
       return records.filter(Boolean).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     },
-    async publish({idempotencyKey: id, project: input}, files) {
+    async publish({idempotencyKey: id, project: input, ownerId}, files) {
       if (!validId(id)) throw new HttpError(400, 'invalidProject');
       const existing = await get(id);
-      if (existing) return existing;
+      if (existing) { if (existing.ownerId !== ownerId) throw new HttpError(409, 'publicationConflict'); return existing; }
       let draft;
       try { draft = validateDraft(input); } catch (error) { throw new HttpError(400, error.message); }
       for (const role of ['cover', 'report', 'notebook', 'reflection', 'model']) if (files.filter(file => file.role === role).length > 1) throw new HttpError(400, 'duplicateRole');
       await mkdir(root, {recursive: true});
       const staging = path.join(root, `.pending-${randomUUID()}`);
       await mkdir(path.join(staging, 'media'), {recursive: true});
-      const project = {...draft, id: `journey-${id}`, createdAt: new Date().toISOString(), cover: '', color: '#68734d', fieldPhotos: [], finalOutcomes: [null, null, null], model: null};
+      const project = {...draft, ownerId, id: `journey-${id}`, createdAt: new Date().toISOString(), cover: '', color: '#68734d', fieldPhotos: [], finalOutcomes: [null, null, null], model: null};
       try {
         for (const file of files.filter(file => file.role !== 'reference')) {
           const filename = `${file.id}.${file.ext}`;
@@ -49,13 +49,14 @@ export function projectStore(directory) {
           if (!['EEXIST', 'ENOTEMPTY'].includes(error.code)) throw error;
           const concurrent = await get(id);
           if (!concurrent) throw error;
+          if (concurrent.ownerId !== ownerId) throw new HttpError(409, 'publicationConflict');
           return concurrent;
         }
         return project;
       } finally { await rm(staging, {recursive: true, force: true}); }
     },
     async media(id, filename) {
-      if (!validId(id) || !/^[a-zA-Z0-9-]{1,80}\.(pdf|docx|txt|md|json|png|jpg|jpeg|webp|glb)$/.test(filename)) throw new HttpError(404, 'notFound');
+      if (!validId(id) || !/^[a-zA-Z0-9-]{1,80}\.(pdf|docx|xls|xlsx|ppt|pptx|zip|txt|md|json|png|jpg|jpeg|webp|glb)$/.test(filename)) throw new HttpError(404, 'notFound');
       try { return await readFile(path.join(root, id, 'media', filename)); }
       catch (error) { if (error.code === 'ENOENT') throw new HttpError(404, 'notFound'); throw error; }
     }

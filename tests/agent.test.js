@@ -19,8 +19,11 @@ async function fixture(t, options = {}) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(directory, {recursive: true, force: true}); });
-  return {server, directory, base, env, async post(route, body, token = admin) {
-    return fetch(`${base}${route}`, {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`}, body: JSON.stringify(body)});
+  const registration = await fetch(`${base}/api/auth/register`, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Journey-Request': '1'}, body: JSON.stringify({name: 'Test teacher', email: `${randomUUID()}@example.test`, password: 'test-account-password', role: 'teacher'})});
+  assert.equal(registration.status, 201);
+  const cookie = registration.headers.get('set-cookie').split(';')[0], session = await registration.json();
+  return {server, directory, base, env, cookie, csrfToken: session.csrfToken, user: session.user, async post(route, body, token = admin) {
+    return fetch(`${base}${route}`, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Journey-Request': '1', ...(token === admin ? {Cookie: cookie, 'X-CSRF-Token': session.csrfToken} : {Authorization: `Bearer ${token}`})}, body: JSON.stringify(body)});
   }};
 }
 
@@ -31,7 +34,7 @@ test('public reads do not need a password, all writes and analysis do', async t 
   for (const route of ['/api/projects', '/api/agent/analyze']) {
     const response = await f.post(route, {project: project(), files: [textFile()]}, 'wrong');
     assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), {error: 'unauthorized'});
+    assert.deepEqual(await response.json(), {error: 'loginRequired'});
   }
   assert.equal(calls, 0);
   for (const route of ['/.env', '/server/agent.js', '/storage/projects', '/package.json', '/src/..%2fserver/agent.js', '/src/%2e%2e%2f.env', '/src/%2e%2e%2f.git/config']) assert.equal((await fetch(`${f.base}${route}`)).status, 404, route);
@@ -43,8 +46,8 @@ test('public reads do not need a password, all writes and analysis do', async t 
 test('missing configuration disables analysis honestly and never returns credentials', async t => {
   const f = await fixture(t, {env: {JOURNEY_ADMIN_TOKEN: '', DEEPSEEK_API_KEY: ''}});
   const response = await (await fetch(`${f.base}/api/agent/status`)).json();
-  assert.deepEqual(response, {publishing: false, analysis: false, provider: 'DeepSeek', model: 'deepseek-flash'});
-  assert.equal((await f.post('/api/projects', {})).status, 503);
+  assert.deepEqual(response, {publishing: false, analysis: false, role: 'visitor', provider: 'DeepSeek', model: 'deepseek-flash'});
+  assert.equal((await f.post('/api/projects', {})).status, 400);
   f.env.JOURNEY_ADMIN_TOKEN = admin;
   assert.equal((await f.post('/api/agent/analyze', {files: [textFile()]})).status, 503);
 });

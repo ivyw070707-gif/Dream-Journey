@@ -2,12 +2,15 @@ function apiRoot() {
   const configured = document.querySelector('meta[name="journey-api-base"]')?.content.trim();
   return new URL(configured ? `${configured.replace(/\/$/, '')}/` : './', document.baseURI);
 }
-export async function apiRequest(route, {token, body, signal} = {}) {
+let csrfToken;
+export function setSessionCSRF(value) { csrfToken = value || undefined; }
+export async function apiRequest(route, {body, signal} = {}) {
   let response;
   try {
     response = await fetch(new URL(route, apiRoot()), {
       method: body === undefined ? 'GET' : 'POST',
-      headers: {...(body === undefined ? {} : {'Content-Type': 'application/json'}), ...(token ? {Authorization: `Bearer ${token}`} : {})},
+      headers: {...(body === undefined ? {} : {'Content-Type': 'application/json', 'X-Journey-Request': '1'}), ...(csrfToken && body !== undefined ? {'X-CSRF-Token': csrfToken} : {})},
+      credentials: 'include',
       ...(body === undefined ? {} : {body: JSON.stringify(body)}), signal: signal || AbortSignal.timeout(60000), cache: 'no-store'
     });
   } catch (error) { if (error.name === 'AbortError') throw error; throw new Error('connectionError'); }

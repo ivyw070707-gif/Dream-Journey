@@ -1,0 +1,11 @@
+[hidden]{display:none!important}
+.account-button{font-size:11px;color:var(--olive);white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+#account-dialog{width:min(480px,94vw);max-height:92dvh;padding:28px 32px;border:1px solid var(--line);border-radius:7px;background:var(--paper-light);color:var(--ink);overflow:auto;box-shadow:0 20px 80px #30372e30}
+#account-dialog::backdrop{background:#30372e70;backdrop-filter:blur(5px)}
+.account-heading{display:flex;justify-content:space-between;align-items:center;gap:15px}.account-heading>button{font-size:27px;padding:0 3px}
+#account-dialog h2{font:500 30px/1.5 var(--serif);margin:20px 0 8px}.account-note{font-size:12px;line-height:1.9;color:var(--muted)}
+.account-tabs{display:flex;gap:25px;border-bottom:1px solid var(--line);margin:22px 0}.account-tabs button{font-size:12px;padding:8px 0}.account-tabs [aria-pressed=true]{border-bottom:1px solid var(--olive);color:var(--olive)}
+#account-form fieldset{border:0;padding:0;margin:0;min-width:0}.account-submit{width:100%}.account-password-hint{font-size:10px;line-height:1.8;color:var(--muted)}
+.account-role-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}.account-role-picker label{display:grid;grid-template-columns:auto 1fr;align-content:start;gap:8px;padding:14px;border:1px solid var(--line);border-radius:3px;cursor:pointer}.account-role-picker label:has(input:checked){border-color:var(--olive);background:#68734d09}.account-role-picker input{accent-color:var(--olive);margin:4px 0 0}.account-role-picker strong{font-size:12px;font-weight:500}.account-role-picker small{grid-column:1/-1;font-size:10px;line-height:1.8;color:var(--muted)}
+.account-error{font-size:12px;line-height:1.8;color:#a14c37;margin-bottom:0}.account-error:empty{display:none}.account-name{font-size:18px}.account-logout{margin-top:20px}
+@media(max-width:600px){#account-dialog{padding:22px 20px}.account-button{font-size:10px;max-width:135px}.header-tools{gap:10px}.account-role-picker label{padding:10px}.entrance-actions{gap:14px}}

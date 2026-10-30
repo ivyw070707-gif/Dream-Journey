@@ -53,7 +53,7 @@ test('both languages cover interface messages and all four cover labels', () => 
     pair.forEach(value => assert.ok(typeof value === 'string' && value.length > 0, key));
     assert.equal(translate(key, 'zh'), pair[0]); assert.equal(translate(key, 'en'), pair[1]);
   }
-  for (const file of ['app.js','route.js', 'project-agent.js', 'project-view.js', 'model-viewer.js']) {
+  for (const file of ['app.js','route.js', 'project-agent.js', 'project-view.js', 'model-viewer.js', 'account.js']) {
     const source = readFileSync(new URL(`../src/js/${file}`, import.meta.url), 'utf8');
     for (const [,key] of source.matchAll(/\bt\('([^']+)'\)/g)) assert.ok(messages[key], `${file}: ${key}`);
   }

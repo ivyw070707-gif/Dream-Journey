@@ -20,8 +20,8 @@ document.querySelector('#run').onclick = async () => {
       if (String(url).endsWith('/api/agent/analyze')) {
         analyzeCount++;
         const body = JSON.parse(init.body);
-        check(init.headers.Authorization === 'Bearer test-only-password', 'Analysis carries the administrator password only in its authorization header');
-        check(body.files.length === 2 && body.files.every(file => file.data.length), 'Only documents and images reach analysis; the GLB is excluded');
+        check(init.credentials === 'include' && Boolean(init.headers['X-CSRF-Token']), 'Analysis uses the teacher session cookie and CSRF protection');
+        check(body.files.length === 4 && body.files.every(file => file.data.length), 'Only documents and images reach analysis; the GLB is excluded');
         return win.Response.json({project: {...emptyDraft(), title: {zh: '敦煌石窟研学', en: 'Dunhuang study'}, destination: {zh: '敦煌', en: 'Dunhuang'}, researchQuestion: {zh: '壁画为何褪色？', en: 'Why do murals fade?'}}, warnings: ['A test warning / 测试提示'], evidence: [{field: 'researchQuestion', source: body.files[0].id, quote: '壁画为何褪色？'}], fileRoles: [{id: body.files[0].id, role: 'report', caption: {zh: '研究报告', en: 'Research report'}}]});
       }
       if (String(url).endsWith('/api/projects') && init?.method === 'POST') {
@@ -34,16 +34,51 @@ document.querySelector('#run').onclick = async () => {
     };
     const fill = (selector, value) => { const input = doc.querySelector(selector); input.value = value; input.dispatchEvent(new win.Event('input', {bubbles: true})); };
     doc.querySelector('header [data-language="zh"]').click();
+    await until(() => Boolean(doc.body.dataset.role), 'initial visitor state');
+    if (doc.body.dataset.role !== 'visitor') {
+      doc.querySelector('.entrance-actions [data-account]').click();
+      doc.querySelector('.account-logout').click();
+      await until(() => doc.body.dataset.role === 'visitor', 'reset test session');
+    }
+    check(doc.body.dataset.role === 'visitor' && doc.querySelector('#entrance-new-project').hidden, 'Visitors are the default and have no upload control');
+    async function register(role) {
+      doc.querySelector('.entrance-actions [data-account]').click();
+      doc.querySelector('[data-mode="register"]').click();
+      fill('#account-form [name="name"]', `Test ${role}`);
+      const email = `${win.crypto.randomUUID()}@example.test`;
+      fill('#account-form [name="email"]', email);
+      fill('#account-form [name="password"]', 'browser-test-password');
+      fill('#account-form [name="confirmation"]', 'browser-test-password');
+      doc.querySelector(`#account-form [name="role"][value="${role}"]`).checked = true;
+      doc.querySelector('.account-submit').click();
+      await until(() => doc.body.dataset.role === role, `${role} registration`);
+      return email;
+    }
+    await register('donor');
+    check(doc.querySelector('#entrance-new-project').hidden, 'Donor registration enters donor mode without upload permission');
+    doc.querySelector('.account-logout').click();
+    await until(() => doc.body.dataset.role === 'visitor', 'donor logout');
+    const teacherEmail = await register('teacher');
+    doc.querySelector('.account-logout').click();
+    await until(() => doc.body.dataset.role === 'visitor', 'teacher logout');
+    doc.querySelector('.entrance-actions [data-account]').click();
+    fill('#account-form [name="email"]', teacherEmail);
+    fill('#account-form [name="password"]', 'browser-test-password');
+    doc.querySelector('.account-submit').click();
+    await until(() => doc.body.dataset.role === 'teacher', 'teacher sign-in');
+    check(!doc.querySelector('#entrance-new-project').hidden, 'Teacher sign-in restores the account role and upload permission');
+    doc.querySelector('[data-account-close]').click();
+    check(!doc.querySelector('#entrance-new-project').hidden, 'Teacher registration and session enable the upload control');
     (doc.querySelector('#entrance-new-project') || doc.querySelector('#new-project')).click();
     await until(() => doc.querySelector('.agent-connection.ready'), 'assistant connection');
     check(doc.querySelector('#project-agent').open, 'Header opens an accessible project assistant dialog');
-    fill('#agent-token', 'test-only-password');
     const transfer = new win.DataTransfer();
-    for (const [url, name, type] of [['fixtures/research-notes.docx', 'research-notes.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'], ['../assets/images/journeys/dunhuang.png', 'dunhuang.png', 'image/png'], ['fixtures/model.glb', 'model.glb', 'model/gltf-binary']]) {
+    for (const [url, name, type] of [['fixtures/research-notes.docx', 'research-notes.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'], ['../assets/images/journeys/dunhuang.png', 'dunhuang.png', 'image/png'], ['fixtures/model.glb', 'model.glb', 'model/gltf-binary'], ['fixtures/research-bundle.zip', 'research-bundle.zip', 'application/zip']]) {
       const buffer = await (await fetch(url)).arrayBuffer(); transfer.items.add(new win.File([buffer], name, {type}));
     }
     const input = doc.querySelector('#agent-files'); input.files = transfer.files; input.dispatchEvent(new win.Event('change', {bubbles: true}));
-    await until(() => doc.querySelectorAll('.agent-file').length === 3 && !doc.querySelector('.agent-analyze').disabled, 'file reading');
+    await until(() => doc.querySelectorAll('.agent-file').length === 5 && !doc.querySelector('.agent-analyze').disabled, 'file reading');
+    check(doc.querySelectorAll('.agent-file').length === 5 && doc.querySelector('.agent-files').textContent.includes('research-sheet.xlsx'), 'ZIP expands into separate reviewable Office files');
     check(doc.querySelector('.agent-file img') && doc.querySelector('select').value === 'reference', 'Images preview correctly and documents begin as private references');
     doc.querySelector('.agent-analyze').click();
     await until(() => doc.querySelector('[data-field="title"]').value === '敦煌石窟研学', 'DeepSeek autofill');
@@ -60,7 +95,7 @@ document.querySelector('#run').onclick = async () => {
     await until(() => doc.querySelector('.project-opening h1')?.textContent.includes('<img'), 'publication');
     check(!doc.querySelector('#project-agent').open && win.location.hash === '#journey/browser-check-1', 'Publication opens the new project directly');
     check(!doc.querySelector('.project-opening h1 img'), 'Uploaded project text is displayed literally, without executing HTML');
-    check(submitted.project.title.en === 'Edited Dunhuang study' && submitted.files.length === 3, 'Edited bilingual details and file roles reach publication');
+    check(submitted.project.title.en === 'Edited Dunhuang study' && submitted.files.length === 5, 'Edited bilingual details and file roles reach publication');
     await until(() => doc.querySelector('.model-viewer')?.dataset.ready === 'true', 'real GLB render');
     const modelHost = doc.querySelector('.model-viewer'); modelHost.scrollIntoView(); await wait(80);
     check(modelHost.querySelector('canvas').width > 0, 'The uploaded GLB renders through the actual Three.js loader');
@@ -86,8 +121,8 @@ document.querySelector('#run').onclick = async () => {
     check(doc.querySelectorAll('.destination-poster').length === 5 && doc.querySelectorAll('.globe-marker').length === 4, 'Projects with unknown coordinates appear in the archive without invented map positions');
     doc.querySelector('.gallery-close').click();
     (doc.querySelector('#entrance-new-project') || doc.querySelector('#new-project')).click(); await until(() => doc.querySelector('.agent-connection.ready'), 'second draft');
-    check(doc.querySelector('#agent-token').value === '', 'Closing the assistant clears its password');
-    fill('#agent-token', 'test-only-password'); fill('[data-field="title"]', '有坐标的新项目'); fill('[data-field="destination"]', '敦煌'); fill('#agent-lat', '40.142'); fill('#agent-lng', '94.662');
+    check(!doc.querySelector('#agent-token') && doc.body.dataset.role === 'teacher', 'Teacher session persists without a shared administrator password');
+    fill('[data-field="title"]', '有坐标的新项目'); fill('[data-field="destination"]', '敦煌'); fill('#agent-lat', '40.142'); fill('#agent-lng', '94.662');
     doc.querySelector('.agent-publish').click(); await until(() => win.location.hash === '#journey/browser-check-2', 'second publication');
     doc.querySelector('#home').click(); await until(() => doc.querySelector('.globe')?.dataset.ready, 'globe with fifth marker');
     check(doc.querySelectorAll('.globe-marker').length === 5, 'Additional markers render beyond the four original destinations');
