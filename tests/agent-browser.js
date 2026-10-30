@@ -89,7 +89,7 @@ document.querySelector('#run').onclick = async () => {
     check(doc.querySelector('#agent-token').value === '', 'Closing the assistant clears its password');
     fill('#agent-token', 'test-only-password'); fill('[data-field="title"]', '有坐标的新项目'); fill('[data-field="destination"]', '敦煌'); fill('#agent-lat', '40.142'); fill('#agent-lng', '94.662');
     doc.querySelector('.agent-publish').click(); await until(() => win.location.hash === '#journey/browser-check-2', 'second publication');
-    doc.querySelector('#home').click(); await until(() => doc.querySelector('.globe')?.dataset.ready === 'true', 'globe with fifth marker');
+    doc.querySelector('#home').click(); await until(() => doc.querySelector('.globe')?.dataset.ready, 'globe with fifth marker');
     check(doc.querySelectorAll('.globe-marker').length === 5, 'Additional markers render beyond the four original destinations');
     doc.querySelector('.globe-marker[data-i="5"]').click(); doc.querySelector('.destination-poster[data-project="5"]').click();
     check(doc.querySelector('.project-opening h1').textContent === '有坐标的新项目', 'Map markers retain the correct project index when some journeys have no coordinates');

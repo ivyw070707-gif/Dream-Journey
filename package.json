@@ -8,6 +8,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server/index.js",
     "dev": "node --watch --env-file-if-exists=.env server/index.js",
+    "test:live": "node --env-file=.env scripts/smoke-agent.mjs",
     "check": "node scripts/check.mjs",
     "test": "node --test tests/*.test.js"
   },
