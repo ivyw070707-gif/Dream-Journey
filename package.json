@@ -1,0 +1,8 @@
+{
+  "name": "dream-journey",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check app.js && node --check data.js"
+  }
+}
