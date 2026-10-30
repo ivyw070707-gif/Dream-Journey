@@ -4,6 +4,8 @@ import {journeyRoute} from './route.js';
 import {landscape} from './landscape.js';
 
 const app = document.querySelector('#app'), dialog = document.querySelector('#viewer');
+const destinationGallery = document.querySelector('#destination-gallery');
+let galleryDestination = null, galleryReturnFocus = null;
 let storage;
 try { storage = window.localStorage; } catch { /* Storage is optional. */ }
 let language = initialLocale(storage, navigator.language);
@@ -65,90 +67,78 @@ function globeMarkup() {
 
 function renderMap() {
   beginRender(); selected = null;
-  app.innerHTML = `<section class="atlas"><div class="atlas-heading"><div class="eyebrow"><span class="tiny-star">✳</span> ${t('atlas')}</div><h1>去远方<span class="title-dot">。</span></h1><p>${t('hero')}</p><div class="small-rule"></div><span class="intro-cn">${t('intro')}</span></div>
-    <div class="map-wrap">${globeMarkup()}<span class="map-caption">${t('mapCaption')}</span></div>
-    <div class="map-side"><span>01 — ${total()}</span><div class="vertical-text">${t('followQuestion')}</div></div>
-    <div class="question-panel"><span class="eyebrow">${t('firstQuestion')}</span><h2 id="question"></h2><p id="question-meta"></p><button id="enter" class="text-link">${t('followJourney')} <span>↗</span></button></div>
-    <div class="atlas-bottom"><span><i class="red-dot"></i> <b>${total()}</b> ${t('possibilities')}</span><span class="atlas-hint">${t('choosePoint')}</span></div></section>
-    <section class="archive" id="archive"><div class="archive-top"><span class="eyebrow">${t('beginning')}</span><span class="drag-note">← &nbsp; ${t('drag')} &nbsp; →</span><div><button id="prev" aria-label="${t('previous')}">←</button><button id="next" aria-label="${t('next')}">→</button></div></div>
-    <div class="gallery" aria-label="${t('archive')}">${projects.map((p, i) => `<button class="artifact ${i === active ? 'chosen' : ''}" data-i="${i}" aria-label="${p.title}" style="--rot:${[-5,3,-2,4][i]}deg"><span class="tape"></span>${coverImage(p, i === active ? 'eager' : 'lazy')}<span class="artifact-label"><span>${number(i)} / ${p.destination}</span><span>${p.title} ↗</span></span></button>`).join('')}</div>
-    <div class="archive-footer"><span>${t('realBeginnings')}</span><span id="counter"></span><span>${t('paperBeginning')}</span></div></section>
-    <section class="atlas-coda"><div class="coda-art">${landscape({kind: 'river'})}</div><div><span class="eyebrow">${t('codaEyebrow')}</span><h2>${t('codaTitle')}</h2><p>${t('codaBody')}</p><button class="text-link idea-open">${t('about')} ↗</button></div></section>
-    <footer><span>去远方 / Dream Journey</span><span>${t('disclaimer')}</span><button id="about-footer">${t('about')} ↗</button></footer>`;
-  setNavigation(currentNav === 'journeys' ? 'journeys' : 'explore');
-  bindMap(); updateSelection(false);
-  centerGallery(false);
+  document.body.classList.add('atlas-only');
+  app.innerHTML = `<section class="atlas atlas-entrance"><h1 class="entrance-title">去远方</h1><div class="map-wrap">${globeMarkup()}</div></section>`;
+  setNavigation('explore');
   const thisRender = renderId, host = document.querySelector('.globe');
+  let flatObserver;
   const fallback = () => {
     if (thisRender !== renderId) return;
     if (globe) { globeView = globe.getView(); globe.dispose(); globe = null; }
     host.classList.add('globe-fallback'); host.dataset.ready = 'fallback';
-    host.querySelector('.globe-status').textContent = t('mapFallback');
-    host.querySelector('.globe-status').hidden = false;
-    host.querySelectorAll('.globe-marker').forEach((button, i) => {
-      button.hidden = false; button.style.left = ''; button.style.top = '';
-      button.onclick = () => { active = i; updateSelection(); };
-    });
+    host.querySelector('.globe-status').hidden = true;
+    const positionMarkers = () => {
+      const scale = Math.min(host.clientWidth / 750, host.clientHeight / 500);
+      const left = (host.clientWidth - 750 * scale) / 2, top = (host.clientHeight - 500 * scale) / 2;
+      host.querySelectorAll('.globe-marker').forEach((button, i) => {
+        const point = projects[i].destinationCoords;
+        button.hidden = false;
+        button.style.left = `${left + (point.lng - 65) * 10 * scale}px`;
+        button.style.top = `${top + (60 - point.lat) * 10 * scale}px`;
+        button.style.setProperty('--label-x','12px'); button.style.setProperty('--label-y','0px');
+        button.onclick = () => openDestination(i);
+      });
+    };
+    positionMarkers(); flatObserver?.disconnect(); flatObserver = new ResizeObserver(positionMarkers); flatObserver.observe(host);
   };
+  // Bind immediately, including while WebGL and geography load.
+  host.querySelectorAll('.globe-marker').forEach((button, i) => button.onclick = () => openDestination(i));
+  cleanup = () => flatObserver?.disconnect();
   import('./globe.js').then(({createGlobe}) => {
     if (thisRender !== renderId) return;
-    try { globe = createGlobe(host, {projects, active, view: globeView, onSelect: i => { active = i; updateSelection(); }, onError: fallback}); }
+    try { globe = createGlobe(host, {projects, active, view: globeView, onSelect: i => openDestination(i), onError: fallback}); }
     catch { fallback(); }
   }).catch(fallback);
 }
 
-function centerGallery(smooth = true) {
-  const gallery = document.querySelector('.gallery'), element = gallery.children[active];
-  gallery.scrollTo({left: element.offsetLeft - gallery.offsetLeft - gallery.clientWidth / 2 + element.clientWidth / 2, behavior: smooth ? scrollBehavior() : 'instant'});
-}
-function updateSelection(scroll = true) {
-  const p = projects[active];
-  document.querySelector('#question').textContent = p.researchQuestion || p.title;
-  document.querySelector('#question-meta').textContent = `${p.destination} · ${t('detailsPending')}`;
-  document.querySelector('#counter').textContent = `${number(active)} / ${total()}`;
-  document.querySelectorAll('.artifact').forEach((element, i) => element.classList.toggle('chosen', i === active));
+function updateSelection() {
   document.querySelectorAll('.globe-marker').forEach((element, i) => {
     element.classList.toggle('active', i === active); element.setAttribute('aria-pressed', String(i === active));
   });
   globe?.select(active);
-  if (scroll) centerGallery();
 }
-
-function bindMap() {
-  const events = new AbortController(), signal = events.signal;
-  document.querySelector('#enter').onclick = () => openProject(active);
-  document.querySelector('#prev').onclick = () => { active = (active + projects.length - 1) % projects.length; updateSelection(); };
-  document.querySelector('#next').onclick = () => { active = (active + 1) % projects.length; updateSelection(); };
-  const gallery = document.querySelector('.gallery');
-  let down = false, start = 0, left = 0, moved = false, timer;
-  gallery.addEventListener('pointerdown', event => { down = true; moved = false; start = event.clientX; left = gallery.scrollLeft; }, {signal});
-  window.addEventListener('pointerup', () => { down = false; }, {signal});
-  window.addEventListener('pointercancel', () => { down = false; }, {signal});
-  gallery.addEventListener('pointermove', event => {
-    if (!down || event.pointerType === 'touch') return;
-    if (Math.abs(event.clientX - start) > 5) { moved = true; gallery.scrollLeft = left - (event.clientX - start); }
-  }, {signal});
-  gallery.addEventListener('scroll', () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const center = gallery.scrollLeft + gallery.clientWidth / 2;
-      const closest = [...gallery.children].map((element, i) => ({i, distance: Math.abs(element.offsetLeft - gallery.offsetLeft + element.clientWidth / 2 - center)})).sort((a, b) => a.distance - b.distance)[0].i;
-      if (closest !== active) { active = closest; updateSelection(false); }
-    }, 120);
-  }, {signal});
-  gallery.querySelectorAll('.artifact').forEach(element => element.onclick = () => {
-    if (moved) return;
-    const index = Number(element.dataset.i);
-    if (index === active) openProject(index); else { active = index; updateSelection(); }
-  });
-  document.querySelector('#about-footer').onclick = showIdea;
-  document.querySelector('.idea-open').onclick = showIdea;
-  const observer = new IntersectionObserver(([entry]) => {
-    if (!selected) setNavigation(entry.isIntersecting && entry.boundingClientRect.top < innerHeight * 0.65 ? 'journeys' : 'explore');
-  }, {rootMargin: '0px 0px -35% 0px'});
-  observer.observe(document.querySelector('#archive'));
-  cleanup = () => { events.abort(); observer.disconnect(); clearTimeout(timer); };
+function destinationEntries(index) {
+  const destination = projects[index].destinationCoords;
+  return projects.map((project, i) => ({project, i})).filter(({project}) =>
+    Math.abs(project.destinationCoords.lat - destination.lat) < 0.001 && Math.abs(project.destinationCoords.lng - destination.lng) < 0.001);
 }
+function openDestination(index, {push = true} = {}) {
+  active = index; updateSelection(); galleryDestination = projects[index].id;
+  galleryReturnFocus = document.querySelector(`.globe-marker[data-i="${index}"]`);
+  renderDestinationGallery();
+  document.body.classList.add('gallery-open');
+  if (!destinationGallery.open) destinationGallery.showModal();
+  if (push) history.pushState({}, '', `#gallery/${galleryDestination}`);
+}
+function renderDestinationGallery() {
+  const entries = destinationEntries(active);
+  destinationGallery.innerHTML = `<div class="destination-gallery-header"><div><span>${t('destinationArchive')}</span><h2 id="destination-gallery-title">${projects[active].destination}</h2></div><button class="gallery-close" aria-label="${t('backMap')}"><span>${t('backMap')}</span> ×</button></div>
+    <div class="destination-posters ${entries.length === 1 ? 'single-poster' : ''}" aria-label="${t('archive')}">${entries.map(({project, i}) => `<button class="destination-poster" data-project="${i}" aria-label="${t('followJourney')}: ${project.title}"><span class="poster-mount">${coverImage(project, 'eager')}</span><span class="poster-caption"><span><small>${project.destination}</small><strong>${project.title}</strong></span><span class="poster-enter">${t('followJourney')} ↗</span></span></button>`).join('')}</div>
+    <p class="gallery-instruction">${t('posterInstruction')}</p>`;
+  destinationGallery.querySelector('.gallery-close').onclick = () => closeDestinationGallery();
+  destinationGallery.querySelectorAll('[data-project]').forEach(button => button.onclick = () => openProject(Number(button.dataset.project)));
+}
+function closeDestinationGallery({navigate = true} = {}) {
+  galleryDestination = null; document.body.classList.remove('gallery-open');
+  if (destinationGallery.open) destinationGallery.close();
+  if (navigate && location.hash.startsWith('#gallery/')) {
+    // Replace this layer with the map without manufacturing another history entry.
+    history.replaceState({}, '', '#explore');
+  }
+  galleryReturnFocus?.focus({preventScroll:true});
+}
+destinationGallery.addEventListener('cancel', event => { event.preventDefault(); closeDestinationGallery(); });
+destinationGallery.addEventListener('click', event => { if (event.target === destinationGallery) closeDestinationGallery(); });
 
 const positions = [[65,210],[165,140],[235,55],[288,191],[340,300],[410,112],[477,222],[550,74],[617,171],[687,277],[760,130],[830,224],[924,110]];
 const edges = [[0,1],[1,2],[1,3],[2,4],[4,5],[3,5],[5,6],[6,7],[7,8],[8,9],[8,10],[9,11],[10,11],[11,12]];
@@ -157,11 +147,12 @@ function researchConstellation() {
 }
 
 function openProject(i) {
+  closeDestinationGallery({navigate:false});
   active = i; selected = projects[i];
   history.pushState({}, '', `#journey/${selected.id}`); renderProject(); window.scrollTo(0, 0);
 }
 function renderProject() {
-  beginRender(); setNavigation('journeys');
+  beginRender(); document.body.classList.remove('atlas-only'); setNavigation('journeys');
   const p = selected;
   const photo = p.fieldPhotos[0];
   const fieldImage = photo ? `<figure><img src="${photo.src}" alt="${photo.alt || ''}" loading="lazy"><figcaption>${photo.caption || ''}</figcaption></figure>` : mediaSlot(t('fieldPhotoPending'));
@@ -219,11 +210,12 @@ function renderViewer() {
 function showIdea() { openViewer({type: 'idea'}); }
 function goHome(section = 'explore') {
   if (dialog.open) dialog.close();
-  viewerState = null; currentNav = section;
-  history.pushState({}, '', `#${section}`); renderMap();
-  if (section === 'journeys') document.querySelector('#archive').scrollIntoView({behavior: scrollBehavior()});
-  else window.scrollTo(0, 0);
+  closeDestinationGallery({navigate:false});
+  viewerState = null; currentNav = 'explore';
+  history.pushState({}, '', '#explore'); renderMap(); window.scrollTo(0, 0);
+  if (section === 'journeys') openDestination(active);
 }
+
 function switchLanguage(nextLanguage) {
   if (nextLanguage === language) return;
   const scrollY = window.scrollY;
@@ -232,6 +224,7 @@ function switchLanguage(nextLanguage) {
   projects = getProjects(language); stages = getStages(language);
   updateHeader();
   if (selected) { selected = projects[active]; renderProject(); } else renderMap();
+  if (galleryDestination && !selected) renderDestinationGallery();
   if (viewerState) renderViewer();
   setNavigation(currentNav);
   window.scrollTo({top: scrollY, behavior: 'instant'});
@@ -247,17 +240,19 @@ document.querySelector('#impact').onclick = showIdea;
 document.querySelectorAll('[data-language]').forEach(button => button.onclick = () => switchLanguage(button.dataset.language));
 function init() {
   if (dialog.open) dialog.close(); viewerState = null;
-  const id = location.hash.startsWith('#journey/') ? location.hash.slice(9) : '';
-  const index = projects.findIndex(p => p.id === id);
-  if (index >= 0) { active = index; selected = projects[index]; renderProject(); window.scrollTo(0, 0); }
-  else {
-    currentNav = location.hash === '#journeys' ? 'journeys' : 'explore'; renderMap();
-    if (location.hash === '#journeys') document.querySelector('#archive').scrollIntoView();
+  closeDestinationGallery({navigate:false});
+  const match = location.hash.match(/^#(journey|gallery)\/(.+)$/);
+  const index = match ? projects.findIndex(p => p.id === match[2]) : -1;
+  if (index >= 0 && match[1] === 'journey') {
+    active = index; selected = projects[index]; renderProject(); window.scrollTo(0, 0);
+  } else {
+    currentNav = 'explore'; renderMap();
+    if (index >= 0 && match[1] === 'gallery') openDestination(index, {push:false});
   }
 }
 window.addEventListener('popstate', init);
 window.addEventListener('hashchange', () => {
-  const expected = selected ? `#journey/${selected.id}` : `#${currentNav}`;
+  const expected = selected ? `#journey/${selected.id}` : galleryDestination ? `#gallery/${galleryDestination}` : '#explore';
   if (location.hash !== expected) init();
 });
 updateHeader(); init();

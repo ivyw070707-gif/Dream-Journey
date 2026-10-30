@@ -1,5 +1,8 @@
 // Each entry is [简体中文, English]. Covers are preserved in their original language.
 export const messages = {
+  destinationArchive: ['目的地里的旅程', 'JOURNEYS IN THIS DESTINATION'],
+  backMap: ['返回地图', 'Back to map'],
+  posterInstruction: ['点击一张海报，走进这段旅程。', 'Choose a poster to step into its journey.'],
   explore: ['探索', 'Explore'], journeys: ['旅程', 'Journeys'], idea: ['关于计划', 'The idea'],
   motto: ['一点好奇，走向更大的世界。', 'A LITTLE CURIOSITY. A WIDER WORLD.'],
   atlas: ['一本关于好奇心的地图集', 'AN ATLAS OF CURIOSITY'],

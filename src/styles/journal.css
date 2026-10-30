@@ -29,3 +29,47 @@ html[lang="en"] .atlas-coda h2{font-family:var(--english);font-size:42px;line-he
   .coda-art{width:100%}.atlas-coda>div:last-child{width:100%;padding:5px 8%}
   .atlas-coda h2{font-size:29px}html[lang="en"] .atlas-coda h2{font-size:35px}
 }
+
+/* An entrance with just a title and an atlas. The archive appears only on demand. */
+body.atlas-only>header{display:none}
+body.atlas-only{overflow:hidden}
+.atlas.atlas-entrance{height:100svh;min-height:500px;margin:0;border:0;overflow:hidden}
+.atlas-entrance .entrance-title{position:absolute;top:7vh;left:0;right:0;z-index:3;margin:0;text-align:center;font:500 clamp(38px,4.5vw,66px)/1.3 var(--serif);letter-spacing:.22em;padding-left:.22em;color:var(--ink);pointer-events:none}
+.atlas-entrance .map-wrap{left:10%;right:10%;top:22%;bottom:3%;height:auto}
+.atlas-entrance .globe{height:100%}
+.atlas-entrance .globe-controls,.atlas-entrance .globe-help,.atlas-entrance .globe:before{display:none}
+.atlas-entrance .globe canvas{border-radius:0}
+.atlas-entrance .marker-label{font:13px var(--serif);letter-spacing:1px}
+.atlas-entrance .globe-fallback{background:transparent url('../../assets/maps/china-preview.svg') center/contain no-repeat}
+.atlas-entrance .globe-fallback .globe-markers{position:absolute;inset:0;display:block;padding:0}
+.atlas-entrance .globe-fallback .globe-marker{position:absolute;width:36px;height:36px;padding:0;border:0;border-radius:50%;background:transparent;transform:translate(-50%,-50%)}
+.atlas-entrance .globe-fallback .marker-dot{display:block;left:13px;top:13px;width:10px;height:10px;background:#75855d;box-shadow:0 0 0 5px #75855d14}
+.atlas-entrance .globe-fallback .marker-label{position:absolute;left:33px;top:12px;transform:none!important;font-size:13px}
+.atlas-entrance .globe-marker.active .marker-dot{background:#75855d;box-shadow:0 0 0 5px #75855d14}
+.atlas-entrance .globe-marker.active .marker-label{color:#4f6044;font-weight:400}
+.atlas-entrance .globe-marker:hover .marker-dot,.atlas-entrance .globe-marker:focus-visible .marker-dot{background:var(--accent);box-shadow:0 0 0 9px #ac795c20}
+.atlas-entrance .globe-status{font:13px var(--serif);color:#899277}
+body.gallery-open{overflow:hidden}
+#destination-gallery{position:fixed;inset:0;margin:auto;width:100vw;max-width:none;height:100dvh;max-height:none;padding:40px 6% 25px;border:0;outline:0;background:transparent;box-shadow:none;overflow-y:auto;overflow-x:hidden;color:var(--ink)}
+#destination-gallery::backdrop{background:#f3f0e7ad;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#destination-gallery[open]{display:flex;flex-direction:column;animation:gallery-arrive .35s ease both}
+.destination-gallery-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;z-index:2;flex-shrink:0}
+.destination-gallery-header>div>span{font:9px var(--sans);letter-spacing:2px;color:#92947d}
+.destination-gallery-header h2{font:400 clamp(25px,3vw,40px)/1.5 var(--serif);margin:8px 0 0;letter-spacing:5px}
+.gallery-close{display:flex;align-items:center;gap:17px;min-height:44px;padding:0 5px;font:26px var(--english);color:#697354}
+.gallery-close>span{font:11px var(--sans);letter-spacing:1px}
+.destination-posters{display:flex;justify-content:flex-start;align-items:center;gap:55px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#b6bda4 transparent;flex:1;min-height:0;padding:28px 8%;margin:0 -6.9%;}
+.destination-posters.single-poster{justify-content:center}
+.destination-poster{display:block;position:relative;flex:0 0 auto;max-width:min(540px,80vw);scroll-snap-align:center;text-align:left;transition:transform .3s;transform:rotate(-1.5deg)}
+.destination-poster:nth-child(even){transform:rotate(1.5deg)}
+.destination-poster:hover{transform:rotate(0) translateY(-5px)}
+.poster-mount{display:block;padding:10px;background:#fbf8ed;box-shadow:0 15px 45px #454b3226,1px 3px 8px #454b3214}
+.poster-mount .cover-image{display:block;max-width:100%;width:auto;height:auto;max-height:59dvh;box-shadow:none;background:transparent}
+.poster-caption{display:flex;justify-content:space-between;align-items:flex-end;gap:35px;margin:22px 4px 0;transform:rotate(1.5deg)}
+.poster-caption small{display:block;font:9px var(--sans);letter-spacing:2px;color:#8a8f77;margin-bottom:6px}
+.poster-caption strong{font:400 17px/1.6 var(--serif);letter-spacing:1px}
+.poster-enter{font:10px var(--sans);letter-spacing:1px;border-bottom:1px solid #aeb799;padding-bottom:5px;white-space:nowrap;color:#74815e}
+.gallery-instruction{text-align:center;font:10px/1.8 var(--serif);letter-spacing:2px;color:#858f73;margin:14px 0 0;flex-shrink:0}
+@keyframes gallery-arrive{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.atlas.atlas-entrance{min-height:420px}.atlas-entrance .entrance-title{top:9%;font-size:43px}.atlas-entrance .map-wrap{left:0;right:0;top:25%;bottom:10%}.atlas-entrance .globe-fallback .marker-label{font-size:12px}.atlas-entrance .marker-label{font-size:11px}#destination-gallery{padding:25px 6% 20px}.destination-gallery-header>div>span{font-size:8px;letter-spacing:1px}.destination-gallery-header h2{font-size:29px}.gallery-close{gap:12px}.gallery-close>span{font-size:10px}.destination-posters{padding-top:25px;padding-bottom:25px;gap:25px}.destination-poster{max-width:83vw}.poster-mount{padding:7px}.poster-mount .cover-image{max-height:56dvh}.poster-caption{gap:15px;margin-top:20px}.poster-caption strong{font-size:16px}.poster-caption small{font-size:8px}.poster-enter{font-size:9px;letter-spacing:0}.gallery-instruction{font-size:9px;letter-spacing:1px;margin-top:12px}}
+@media(prefers-reduced-motion:reduce){#destination-gallery[open]{animation:none}.destination-poster{transition:none}}

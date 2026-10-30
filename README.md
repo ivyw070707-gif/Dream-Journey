@@ -36,14 +36,12 @@ tests/                      Node tests and interactive browser checks
 
 ## Interaction
 
-- Drag the globe to explore China; scroll, pinch, or use **+ / −** to zoom. The camera focus is clamped to China’s geographic extent (73–135°E, 18–53°N), and zoom is bounded. The surrounding globe remains visible for context.
-- With the globe focused, arrow keys move the view, **+ / −** zoom, and **Home** restores the overview. The reset button does the same.
-- The globe displays exactly four destination markers: **Zhangzhou** (Tulou), **Suzhou**, **Dunhuang** and **Guiyang** (Miao interview). It never plots departure points or travel lines. City coordinates are representative map positions.
-- Select a destination or cover to open a journey. The detail page retains empty slots for its research question, participants, departure, theme, year, notes, 13 research stages, field photographs, three outcomes and further questions. The hand-drawn itinerary labels the known destination and leaves departure and transport empty.
-- Switch **中 / EN** in the header or artifact dialog. The current journey, reading position, selected project, and globe viewpoint are retained. The browser remembers the language when storage is available.
-- Navigation highlights the atlas, archive, or journey currently being viewed. Opening **The idea** temporarily highlights that item; closing it restores the underlying page’s selection. Direct journey links and browser Back/Forward are supported.
-- If WebGL is unavailable, the destination picker and every journey remain usable.
-- The leaf brand, warm paper palette and decorative landscape artwork from the field-journal design are retained. Decorative landscapes are hidden from assistive technology and are separate from every journey’s empty records.
+- The first screen contains only the **去远方** title and the interactive map. Navigation, introductory text, posters, project details and the footer stay off the entrance screen.
+- Click a destination marker to open its **poster gallery** over a blurred map. Only covers for that destination appear. The gallery preserves original cover aspect ratios; click a poster to enter its project.
+- Close the gallery with its return button, Escape, or the open backdrop. Browser Back from a project restores the corresponding gallery. Direct `#gallery/suzhou` and `#journey/suzhou` links work.
+- The existing Three.js globe still supports dragging and bounded zoom. When WebGL is unavailable, a map generated from the same Natural Earth geometry places all four destinations at their confirmed coordinates.
+- Project pages keep bilingual navigation, artifact viewers, research constellation and empty slots for material not yet supplied. No student research content is invented.
+- Language switching is available after entering a project; the chosen language also applies to subsequent map galleries.
 
 ## Adding content later
 
