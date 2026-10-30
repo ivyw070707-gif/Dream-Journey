@@ -77,7 +77,9 @@ test('language preference survives reload and blocked storage is optional', () =
 
 test('all modules and deployed assets resolve from the static entry point', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  for (const [, path] of html.matchAll(/(?:src|href)="([^"]+)"/g)) assert.ok(existsSync(new URL(`../${path}`, import.meta.url)), path);
+  for (const [, path] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
+    if (!/^(data:|https?:)/.test(path)) assert.ok(existsSync(new URL(`../${path}`, import.meta.url)), path);
+  }
   for (const path of ['../src/js/globe.js','../vendor/three/three.module.min.js','../vendor/three/three.core.min.js','../assets/maps/land.geojson']) assert.ok(existsSync(new URL(path, import.meta.url)), path);
   assert.equal(existsSync(new URL('../assets/images/field.jpg', import.meta.url)), false);
   const land = JSON.parse(readFileSync(new URL('../assets/maps/land.geojson', import.meta.url)));

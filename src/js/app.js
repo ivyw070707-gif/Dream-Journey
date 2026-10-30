@@ -1,6 +1,7 @@
 import {getProjects, getStages, getStageNotes} from './data.js';
 import {initialLocale, translate} from './i18n.js';
 import {journeyRoute} from './route.js';
+import {landscape} from './landscape.js';
 
 const app = document.querySelector('#app'), dialog = document.querySelector('#viewer');
 let storage;
@@ -72,6 +73,7 @@ function renderMap() {
     <section class="archive" id="archive"><div class="archive-top"><span class="eyebrow">${t('beginning')}</span><span class="drag-note">← &nbsp; ${t('drag')} &nbsp; →</span><div><button id="prev" aria-label="${t('previous')}">←</button><button id="next" aria-label="${t('next')}">→</button></div></div>
     <div class="gallery" aria-label="${t('archive')}">${projects.map((p, i) => `<button class="artifact ${i === active ? 'chosen' : ''}" data-i="${i}" aria-label="${p.title}" style="--rot:${[-5,3,-2,4][i]}deg"><span class="tape"></span>${coverImage(p, i === active ? 'eager' : 'lazy')}<span class="artifact-label"><span>${number(i)} / ${p.destination}</span><span>${p.title} ↗</span></span></button>`).join('')}</div>
     <div class="archive-footer"><span>${t('realBeginnings')}</span><span id="counter"></span><span>${t('paperBeginning')}</span></div></section>
+    <section class="atlas-coda"><div class="coda-art">${landscape({kind: 'river'})}</div><div><span class="eyebrow">${t('codaEyebrow')}</span><h2>${t('codaTitle')}</h2><p>${t('codaBody')}</p><button class="text-link idea-open">${t('about')} ↗</button></div></section>
     <footer><span>去远方 / Dream Journey</span><span>${t('disclaimer')}</span><button id="about-footer">${t('about')} ↗</button></footer>`;
   setNavigation(currentNav === 'journeys' ? 'journeys' : 'explore');
   bindMap(); updateSelection(false);
@@ -140,6 +142,7 @@ function bindMap() {
     if (index === active) openProject(index); else { active = index; updateSelection(); }
   });
   document.querySelector('#about-footer').onclick = showIdea;
+  document.querySelector('.idea-open').onclick = showIdea;
   const observer = new IntersectionObserver(([entry]) => {
     if (!selected) setNavigation(entry.isIntersecting && entry.boundingClientRect.top < innerHeight * 0.65 ? 'journeys' : 'explore');
   }, {rootMargin: '0px 0px -35% 0px'});
@@ -194,7 +197,7 @@ function renderViewer() {
   const state = viewerState, p = selected;
   let title, html, description, status = t('pending');
   if (state.type === 'idea') {
-    title = t('ideaTitle'); html = `<div class="context-note"><span class="tiny-star">✳</span><h3>${t('ideaCard')}</h3><p>去远方 / Dream Journey</p></div>`; description = t('ideaBody'); status = '';
+    title = t('ideaTitle'); html = `<div class="idea-art">${landscape({kind: 'house'})}<div class="eyebrow">${t('motto')}</div></div>`; description = t('ideaBody'); status = '';
   } else if (state.type === 'cover') {
     title = p.title; html = coverImage(p, 'eager'); description = `${t('cover')} · ${p.destination}`; status = t('cover');
   } else if (state.type === 'stage') {

@@ -21,8 +21,10 @@ src/
     globe.js                Three.js globe, markers, input, and resource cleanup
     globe-math.js           Geographic conversion and China camera bounds
     i18n.js                 Chinese/English interface text and language preference
+    landscape.js            Decorative artwork from the field-journal design
     route.js                Hand-drawn itinerary framework
   styles/main.css           Paper-atlas design and responsive layouts
+  styles/journal.css        Field-journal palette, brand and decoration
 assets/
   images/journeys/          Four original supplied cover images
   maps/land.geojson          Simplified world country geometry
@@ -41,6 +43,7 @@ tests/                      Node tests and interactive browser checks
 - Switch **中 / EN** in the header or artifact dialog. The current journey, reading position, selected project, and globe viewpoint are retained. The browser remembers the language when storage is available.
 - Navigation highlights the atlas, archive, or journey currently being viewed. Opening **The idea** temporarily highlights that item; closing it restores the underlying page’s selection. Direct journey links and browser Back/Forward are supported.
 - If WebGL is unavailable, the destination picker and every journey remain usable.
+- The leaf brand, warm paper palette and decorative landscape artwork from the field-journal design are retained. Decorative landscapes are hidden from assistive technology and are separate from every journey’s empty records.
 
 ## Adding content later
 
