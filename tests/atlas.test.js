@@ -53,10 +53,12 @@ test('both languages cover interface messages and all four cover labels', () => 
     pair.forEach(value => assert.ok(typeof value === 'string' && value.length > 0, key));
     assert.equal(translate(key, 'zh'), pair[0]); assert.equal(translate(key, 'en'), pair[1]);
   }
-  for (const file of ['app.js','route.js']) {
+  for (const file of ['app.js','route.js', 'project-agent.js', 'project-view.js', 'model-viewer.js']) {
     const source = readFileSync(new URL(`../src/js/${file}`, import.meta.url), 'utf8');
     for (const [,key] of source.matchAll(/\bt\('([^']+)'\)/g)) assert.ok(messages[key], `${file}: ${key}`);
   }
+  for (const code of ['invalidProject', 'invalidYear', 'invalidCoordinates', 'titleRequired', 'destinationRequired', 'fileCount', 'fileType', 'invalidFile', 'fileSize', 'textEncoding', 'imageRequired', 'unreadableFile', 'emptyFiles', 'agentTimeout', 'agentUnavailable', 'agentBusy', 'invalidAgentResponse', 'adminNotConfigured', 'unauthorized', 'agentNotConfigured', 'duplicateRole', 'connectionError', 'serverError', 'originNotAllowed', 'invalidRequest']) assert.ok(messages[`agentError_${code}`], code);
+  for (const role of ['reference', 'cover', 'field', 'report', 'notebook', 'reflection']) assert.ok(messages[`agentRole_${role}`], role);
   const chinese = getProjects('zh'), english = getProjects('en');
   assert.equal(chinese.length, 4);
   for (let i = 0; i < 4; i++) {

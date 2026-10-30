@@ -1,5 +1,6 @@
 // Only the supplied covers, cover titles and confirmed destinations are populated.
-// Add each journey's content to its own definition; empty fields stay empty in the UI.
+// Add each journey's content to its own definition; empty fields are hidden in the UI.
+import {localizeProject} from './project-schema.js';
 const emptyText = () => ({zh: '', en: ''});
 function journey(definition) {
   return {
@@ -7,7 +8,7 @@ function journey(definition) {
     theme: emptyText(), note: emptyText(), year: null,
     researchNotes: Array(13).fill(null),
     transport: emptyText(), fieldPhotos: [], fieldNotes: emptyText(),
-    finalOutcomes: [null, null, null], unansweredQuestions: [],
+    finalOutcomes: [null, null, null], model: null, unansweredQuestions: [],
     ...definition
   };
 }
@@ -41,14 +42,8 @@ export const projects = [
 
 export const stages = ['A small curiosity','The first question','Our first assumption','Reading & research','An idea that failed','A teacher’s question','A better question','Preparing to listen','A journey takes shape','A door opens','In the field','Something unexpected','Looking back'];
 export const chineseStages = ['一点好奇','第一个问题','最初的猜想','阅读与查找','一次失败的想法','老师的追问','更好的问题','准备倾听','旅程渐渐成形','一扇门打开了','走进现场','意料之外的发现','回头看看'];
-const localizedFields = ['title','destination','researchQuestion','studentName','origin','theme','note','transport','fieldNotes'];
-export function getProjects(language) {
-  return projects.map(project => ({
-    ...project,
-    ...Object.fromEntries(localizedFields.map(field => [field, project[field][language]])),
-    researchNotes: project.researchNotes.map(note => note?.[language] || ''),
-    unansweredQuestions: project.unansweredQuestions.map(question => question[language])
-  }));
+export function getProjects(language, published = []) {
+  return [...projects, ...published].map(project => localizeProject(project, language));
 }
 export function getStages(language) { return language === 'zh' ? chineseStages : stages; }
 export function getStageNotes(language, project) { return project.researchNotes; }

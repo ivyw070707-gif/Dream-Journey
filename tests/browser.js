@@ -36,7 +36,7 @@ document.querySelector('#run').onclick = async () => {
       check(gallery.querySelectorAll('.destination-poster').length === 1 && gallery.querySelector('img').getAttribute('src') === project.cover, `${project.destination}: only the matching supplied poster is shown`);
       gallery.querySelector('.destination-poster').click();
       check(!gallery.open && win.location.hash === `#journey/${project.id}` && doc.querySelector('.project-opening h1').textContent === project.title, `${project.destination}: poster opens the correct project page`);
-      check(doc.querySelector('.project .placeholder'), 'Unknown project content stays empty');
+      check(!doc.querySelector('.project .placeholder,.project .media-slot,.research,.fieldwork,.outcomes,.ending'), 'Empty project fields and whole empty sections are hidden');
       if (index === 1) {
         win.history.back(); await until(() => gallery.open, 'Back restores destination gallery');
         check(win.location.hash === '#gallery/suzhou' && gallery.querySelector('img').getAttribute('src') === project.cover, 'Browser Back restores the same poster gallery');

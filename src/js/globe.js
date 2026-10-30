@@ -48,7 +48,7 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
   scene.add(sunlight);
   const vector = point => new THREE.Vector3(...latLngPosition(point));
   const buttons = [...host.querySelectorAll('.globe-marker')];
-  const locations = projects.map(p => vector(p.destinationCoords).multiplyScalar(1.012));
+  const locations = buttons.map(button => vector(projects[Number(button.dataset.i)].destinationCoords).multiplyScalar(1.012));
   const offsets = [[14,12],[14,-8],[-12,-14],[-12,12]];
   let view = clampView(savedView || DEFAULT_VIEW), disposed = false, frame = 0;
   const events = new AbortController(), pointers = new Map();
@@ -72,8 +72,8 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
       button.hidden = !visible;
       button.style.left = `${(projected.x * 0.5 + 0.5) * width}px`;
       button.style.top = `${(-projected.y * 0.5 + 0.5) * height}px`;
-      button.style.setProperty('--label-x', `${offsets[i][0]}px`);
-      button.style.setProperty('--label-y', `${offsets[i][1]}px`);
+      button.style.setProperty('--label-x', `${offsets[i % offsets.length][0]}px`);
+      button.style.setProperty('--label-y', `${offsets[i % offsets.length][1]}px`);
     });
     host.dataset.latitude = view.lat.toFixed(2);
     host.dataset.longitude = view.lng.toFixed(2);
@@ -86,13 +86,14 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
   function zoom(factor) { change({distance: view.distance * factor}); }
   function select(index) {
     active = index;
-    buttons.forEach((button, i) => {
+    buttons.forEach(button => {
+      const i = Number(button.dataset.i);
       button.classList.toggle('active', i === index);
       button.setAttribute('aria-pressed', String(i === index));
     });
     const project = projects[index];
     // Keep the newly selected journey in view, even after a close zoom elsewhere.
-    change({lat: project.destinationCoords.lat, lng: project.destinationCoords.lng});
+    if (project.destinationCoords) change({lat: project.destinationCoords.lat, lng: project.destinationCoords.lng});
   }
 
   const input = {signal: events.signal};
@@ -137,7 +138,7 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
     if (button.dataset.globe === 'reset') change(DEFAULT_VIEW);
     else zoom(button.dataset.globe === 'in' ? 0.85 : 1.15);
   }, input));
-  buttons.forEach((button, i) => button.addEventListener('click', () => onSelect(i), input));
+  buttons.forEach(button => button.addEventListener('click', () => onSelect(Number(button.dataset.i)), input));
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); onError(); }, input);
   const observer = new ResizeObserver(requestRender); observer.observe(host);
   select(active);

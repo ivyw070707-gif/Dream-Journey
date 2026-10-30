@@ -2,8 +2,20 @@
   "name": "dream-journey",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.16.0"
+  },
   "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js",
     "check": "node scripts/check.mjs",
     "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "mammoth": "^1.11.0",
+    "pdf-parse": "^2.4.5"
+  },
+  "devDependencies": {
+    "three": "0.180.0"
   }
 }
