@@ -30,7 +30,8 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
       <section class="agent-review"><div class="agent-review-heading"><h3>${t('agentReviewHeading')}</h3><div class="agent-languages" role="group" aria-label="${t('agentEditLanguage')}"><button data-edit-language="zh" type="button" aria-pressed="${editLanguage === 'zh'}">中文</button><button data-edit-language="en" type="button" aria-pressed="${editLanguage === 'en'}">English</button></div></div><p class="agent-muted">${t('agentReviewHint')}</p>
       <form id="agent-form"><fieldset ${busy ? 'disabled' : ''}><div class="agent-grid">${input('title')}${input('destination')}${input('studentName')}${input('theme')}${input('origin')}${input('transport')}
       <label class="agent-field"><span>${t('year')}</span><input type="number" id="agent-year" min="1900" max="2200" value="${draft.year ?? ''}"></label>
-      <div class="agent-field"><span>${t('agentCoordinates')}</span><div class="agent-coordinate-inputs"><input id="agent-lat" type="number" step="any" min="18" max="53" placeholder="${t('agentLatitude')}" aria-label="${t('agentLatitude')}" value="${draft.destinationCoords?.lat ?? ''}"><input id="agent-lng" type="number" step="any" min="73" max="135" placeholder="${t('agentLongitude')}" aria-label="${t('agentLongitude')}" value="${draft.destinationCoords?.lng ?? ''}"></div></div>
+      <div class="agent-field"><span>${t('agentOriginCoordinates')}</span><div class="agent-coordinate-inputs"><input id="agent-origin-lat" type="number" step="any" min="18" max="53" placeholder="${t('agentLatitude')}" aria-label="${t('agentOriginCoordinates')} · ${t('agentLatitude')}" value="${draft.originCoords?.lat ?? ''}"><input id="agent-origin-lng" type="number" step="any" min="73" max="135" placeholder="${t('agentLongitude')}" aria-label="${t('agentOriginCoordinates')} · ${t('agentLongitude')}" value="${draft.originCoords?.lng ?? ''}"></div></div>
+      <div class="agent-field"><span>${t('agentCoordinates')}</span><div class="agent-coordinate-inputs"><input id="agent-lat" type="number" step="any" min="18" max="53" placeholder="${t('agentLatitude')}" aria-label="${t('agentCoordinates')} · ${t('agentLatitude')}" value="${draft.destinationCoords?.lat ?? ''}"><input id="agent-lng" type="number" step="any" min="73" max="135" placeholder="${t('agentLongitude')}" aria-label="${t('agentCoordinates')} · ${t('agentLongitude')}" value="${draft.destinationCoords?.lng ?? ''}"></div></div>
       ${input('researchQuestion', true)}${input('note', true)}${input('fieldNotes', true)}</div>
       <details class="agent-detail"><summary>${t('agentResearchStages')}</summary>${t('agentStagesHint')}<div class="agent-stage-fields">${t('agentStageNames').split('|').map((name, i) => `<label class="agent-field"><span>${String(i + 1).padStart(2, '0')} / ${name}</span><textarea data-stage-input="${i}" rows="2" maxlength="12000">${esc(localized(draft.researchNotes[i]))}</textarea></label>`).join('')}</div></details>
       <label class="agent-field"><span>${t('furtherQuestions')} · ${t('agentOnePerLine')}</span><textarea id="agent-questions" rows="3" maxlength="12000">${esc(draft.unansweredQuestions.map(localized).join('\n'))}</textarea></label></fieldset></form>
@@ -79,11 +80,13 @@ export function createProjectAgent({getLanguage, t, onPublished}) {
     for (const element of dialog.querySelectorAll('[data-field]')) element.oninput = () => { draft[element.dataset.field][editLanguage] = element.value; };
     for (const element of dialog.querySelectorAll('[data-stage-input]')) element.oninput = () => { const index = Number(element.dataset.stageInput); draft.researchNotes[index] ??= {zh: '', en: ''}; draft.researchNotes[index][editLanguage] = element.value; };
     dialog.querySelector('#agent-year').oninput = event => { draft.year = event.target.value === '' ? null : Number(event.target.value); };
-    const coordinate = () => {
-      const lat = dialog.querySelector('#agent-lat').value, lng = dialog.querySelector('#agent-lng').value;
-      draft.destinationCoords = !lat && !lng ? null : {lat: lat === '' ? NaN : Number(lat), lng: lng === '' ? NaN : Number(lng)};
+    const coordinate = (field, prefix) => {
+      const lat = dialog.querySelector(`#agent-${prefix}lat`).value, lng = dialog.querySelector(`#agent-${prefix}lng`).value;
+      draft[field] = !lat && !lng ? null : {lat: lat === '' ? NaN : Number(lat), lng: lng === '' ? NaN : Number(lng)};
     };
-    dialog.querySelector('#agent-lat').oninput = coordinate; dialog.querySelector('#agent-lng').oninput = coordinate;
+    const destinationCoordinate = () => coordinate('destinationCoords', ''), originCoordinate = () => coordinate('originCoords', 'origin-');
+    dialog.querySelector('#agent-lat').oninput = destinationCoordinate; dialog.querySelector('#agent-lng').oninput = destinationCoordinate;
+    dialog.querySelector('#agent-origin-lat').oninput = originCoordinate; dialog.querySelector('#agent-origin-lng').oninput = originCoordinate;
     dialog.querySelector('#agent-questions').oninput = event => {
       const lines = event.target.value.split('\n').slice(0, 20), previous = draft.unansweredQuestions;
       draft.unansweredQuestions = Array.from({length: Math.max(lines.length, previous.length)}, (_, i) => ({zh: '', en: '', ...previous[i], [editLanguage]: lines[i] || ''}));

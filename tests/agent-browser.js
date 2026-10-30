@@ -16,6 +16,7 @@ document.querySelector('#run').onclick = async () => {
     originalFetch = win.fetch.bind(win);
     let submitted, analyzeCount = 0, savedCount = 0;
     win.fetch = async (url, init) => {
+      if (String(url).endsWith('/api/projects') && !init?.method) return win.Response.json({projects: []});
       if (String(url).endsWith('/api/agent/status')) return win.Response.json({publishing: true, analysis: true, provider: 'DeepSeek', model: 'deepseek-flash'});
       if (String(url).endsWith('/api/agent/analyze')) {
         analyzeCount++;
@@ -56,8 +57,17 @@ document.querySelector('#run').onclick = async () => {
     }
     await register('donor');
     check(doc.querySelector('#entrance-new-project').hidden, 'Donor registration enters donor mode without upload permission');
+    await until(() => doc.querySelectorAll('.ss-map-marker').length === 4, 'donor sponsor stars');
+    check(doc.querySelector('.ss-widget') && !doc.querySelector('.ss-panel').classList.contains('is-open'), 'Donor sees the quiet Sponsor Stars control linked to real destinations');
+    doc.querySelector('[data-account-close]').click();
+    doc.querySelector('.ss-map-marker[data-project-id="tulou"]').click();
+    await until(() => doc.querySelector('#destination-gallery').open, 'sponsor destination gallery');
+    check(win.location.hash === '#gallery/tulou', 'Sponsor Stars markers open their real destination galleries');
+    doc.querySelector('.gallery-close').click();
+    doc.querySelector('.entrance-actions [data-account]').click();
     doc.querySelector('.account-logout').click();
     await until(() => doc.body.dataset.role === 'visitor', 'donor logout');
+    check(!doc.querySelector('.ss-widget'), 'Sponsor Stars is removed when the donor signs out');
     const teacherEmail = await register('teacher');
     doc.querySelector('.account-logout').click();
     await until(() => doc.body.dataset.role === 'visitor', 'teacher logout');
@@ -67,6 +77,7 @@ document.querySelector('#run').onclick = async () => {
     doc.querySelector('.account-submit').click();
     await until(() => doc.body.dataset.role === 'teacher', 'teacher sign-in');
     check(!doc.querySelector('#entrance-new-project').hidden, 'Teacher sign-in restores the account role and upload permission');
+    check(!doc.querySelector('.ss-widget'), 'Sponsor Stars stays hidden for teacher accounts');
     doc.querySelector('[data-account-close]').click();
     check(!doc.querySelector('#entrance-new-project').hidden, 'Teacher registration and session enable the upload control');
     (doc.querySelector('#entrance-new-project') || doc.querySelector('#new-project')).click();
@@ -92,10 +103,12 @@ document.querySelector('#run').onclick = async () => {
     doc.querySelector('[data-edit-language="zh"]').click();
     check(doc.querySelector('[data-field="title"]').value.includes('<img'), 'Changing editing language retains draft changes');
     doc.querySelector('.agent-publish').click();
-    await until(() => doc.querySelector('.project-opening h1')?.textContent.includes('<img'), 'publication');
-    check(!doc.querySelector('#project-agent').open && win.location.hash === '#journey/browser-check-1', 'Publication opens the new project directly');
-    check(!doc.querySelector('.project-opening h1 img'), 'Uploaded project text is displayed literally, without executing HTML');
+    await until(() => win.location.hash === '#explore' && doc.querySelector('.globe')?.dataset.ready && !doc.querySelector('#project-agent').open && !doc.querySelector('.project-opening'), 'publication returns to the main map');
+    check(!doc.querySelector('#project-agent').open && !doc.querySelector('.project-opening'), 'Publication displays the new journey on the main interface');
     check(submitted.project.title.en === 'Edited Dunhuang study' && submitted.files.length === 5, 'Edited bilingual details and file roles reach publication');
+    doc.querySelector('#entrance-archive').click();
+    doc.querySelector('.destination-poster[data-project="7"]').click();
+    check(!doc.querySelector('.project-opening h1 img'), 'Uploaded project text is displayed literally, without executing HTML');
     await until(() => doc.querySelector('.model-viewer')?.dataset.ready === 'true', 'real GLB render');
     const modelHost = doc.querySelector('.model-viewer'); modelHost.scrollIntoView(); await wait(80);
     check(modelHost.querySelector('canvas').width > 0, 'The uploaded GLB renders through the actual Three.js loader');
@@ -118,15 +131,19 @@ document.querySelector('#run').onclick = async () => {
     doc.querySelector('#home').click();
     await until(() => doc.querySelector('.globe')?.dataset.ready, 'new archive');
     doc.querySelector('#entrance-archive').click();
-    check(doc.querySelectorAll('.destination-poster').length === 5 && doc.querySelectorAll('.globe-marker').length === 4, 'Projects with unknown coordinates appear in the archive without invented map positions');
+    check(doc.querySelectorAll('.destination-poster').length === 8 && doc.querySelectorAll('.globe-marker').length === 4, 'Projects with unknown coordinates appear in the archive without invented map positions');
     doc.querySelector('.gallery-close').click();
     (doc.querySelector('#entrance-new-project') || doc.querySelector('#new-project')).click(); await until(() => doc.querySelector('.agent-connection.ready'), 'second draft');
     check(!doc.querySelector('#agent-token') && doc.body.dataset.role === 'teacher', 'Teacher session persists without a shared administrator password');
-    fill('[data-field="title"]', '有坐标的新项目'); fill('[data-field="destination"]', '敦煌'); fill('#agent-lat', '40.142'); fill('#agent-lng', '94.662');
-    doc.querySelector('.agent-publish').click(); await until(() => win.location.hash === '#journey/browser-check-2', 'second publication');
-    doc.querySelector('#home').click(); await until(() => doc.querySelector('.globe')?.dataset.ready, 'globe with fifth marker');
-    check(doc.querySelectorAll('.globe-marker').length === 5, 'Additional markers render beyond the four original destinations');
-    doc.querySelector('.globe-marker[data-i="5"]').click(); doc.querySelector('.destination-poster[data-project="5"]').click();
+    fill('[data-field="title"]', '有坐标的新项目'); fill('[data-field="origin"]', '上海'); fill('[data-field="destination"]', '西安');
+    fill('#agent-origin-lat', '31.2304'); fill('#agent-origin-lng', '121.4737'); fill('#agent-lat', '34.3416'); fill('#agent-lng', '108.9398');
+    doc.querySelector('.agent-publish').click(); await until(() => win.location.hash === '#explore' && doc.querySelector('.globe-marker[data-i="8"]'), 'second publication');
+    check(submitted.project.originCoords.lat === 31.2304 && submitted.project.destinationCoords.lng === 108.9398, 'Departure and destination coordinates reach publication');
+    check(doc.querySelectorAll('.globe-marker').length === 5, 'A newly published destination appears immediately on the main map');
+    doc.querySelector('.globe-marker[data-i="8"]').click();
+    await until(() => doc.querySelector('.journey-route-playback'), 'new journey route');
+    await until(() => doc.querySelector('#destination-gallery').open, 'new journey gallery');
+    doc.querySelector('.destination-poster[data-project="8"]').click();
     check(doc.querySelector('.project-opening h1').textContent === '有坐标的新项目', 'Map markers retain the correct project index when some journeys have no coordinates');
     check(!doc.querySelector('.model-viewer,.project .cover-placeholder'), 'Omitted model and cover do not create blank panels');
     doc.querySelector('header [data-language="en"]').click();

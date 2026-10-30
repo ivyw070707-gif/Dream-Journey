@@ -34,7 +34,7 @@ function earthTexture(land) {
   return texture;
 }
 
-export function createGlobe(host, {projects, active, view: savedView, onSelect, onError}) {
+export function createGlobe(host, {projects, active, view: savedView, onError}) {
   const canvas = host.querySelector('canvas'), status = host.querySelector('.globe-status');
   const renderer = new THREE.WebGLRenderer({canvas, alpha: true, antialias: true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -82,14 +82,20 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
     host.querySelector('[data-globe="out"]').disabled = view.distance >= 3.4;
   }
   function requestRender() { if (!disposed && !frame) frame = requestAnimationFrame(render); }
+  function project(point) {
+    const position = vector(point).multiplyScalar(1.025), projected = position.clone().project(camera);
+    const visible = position.dot(camera.position.clone().sub(position)) > 0 && Math.abs(projected.x) < 0.98 && Math.abs(projected.y) < 0.98;
+    return {x: (projected.x * 0.5 + 0.5) * host.clientWidth, y: (-projected.y * 0.5 + 0.5) * host.clientHeight, visible};
+  }
   function change(next) { view = clampView({...view, ...next}); requestRender(); }
   function zoom(factor) { change({distance: view.distance * factor}); }
   function select(index) {
     active = index;
+    const selectedDestination = projects[index].destination;
     buttons.forEach(button => {
-      const i = Number(button.dataset.i);
-      button.classList.toggle('active', i === index);
-      button.setAttribute('aria-pressed', String(i === index));
+      const i = Number(button.dataset.i), isActive = projects[i].destination === selectedDestination;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
     });
     const project = projects[index];
     // Keep the newly selected journey in view, even after a close zoom elsewhere.
@@ -138,7 +144,6 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
     if (button.dataset.globe === 'reset') change(DEFAULT_VIEW);
     else zoom(button.dataset.globe === 'in' ? 0.85 : 1.15);
   }, input));
-  buttons.forEach(button => button.addEventListener('click', () => onSelect(Number(button.dataset.i)), input));
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); onError(); }, input);
   const observer = new ResizeObserver(requestRender); observer.observe(host);
   select(active);
@@ -153,6 +158,7 @@ export function createGlobe(host, {projects, active, view: savedView, onSelect, 
 
   return {
     select,
+    project,
     getView: () => ({...view}),
     dispose() {
       disposed = true; cancelAnimationFrame(frame); events.abort(); observer.disconnect();

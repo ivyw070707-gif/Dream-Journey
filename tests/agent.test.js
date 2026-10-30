@@ -41,6 +41,12 @@ test('public reads do not need a password, all writes and analysis do', async t 
   const html = await (await fetch(f.base)).text();
   assert.ok(html.includes('id="new-project"'));
   assert.ok(!html.includes('test-key') && !html.includes(admin));
+  const pluginCSS = await fetch(`${f.base}/sponsor-stars-plugin/sponsor-stars.css`);
+  assert.equal(pluginCSS.status, 200);
+  assert.match(pluginCSS.headers.get('content-type'), /^text\/css/);
+  const pluginJS = await fetch(`${f.base}/sponsor-stars-plugin/sponsor-stars.js`);
+  assert.equal(pluginJS.status, 200);
+  assert.match(pluginJS.headers.get('content-type'), /^text\/javascript/);
 });
 
 test('missing configuration disables analysis honestly and never returns credentials', async t => {
@@ -71,6 +77,7 @@ test('DeepSeek receives actual document text and images, valid JSON fills the ex
   assert.ok(request.messages[1].content.some(part => part.type === 'image_url' && part.image_url.url.startsWith('data:image/png;base64,')));
   assert.equal(result.project.researchQuestion.zh, '壁画为何褪色？');
   assert.equal(result.project.studentName.zh, '');
+  assert.equal(result.project.originCoords, null);
   assert.equal(result.project.destinationCoords, null);
   assert.equal(result.evidence.length, 1);
   assert.equal(result.project.researchNotes.length, 13);

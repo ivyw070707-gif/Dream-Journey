@@ -16,7 +16,7 @@ function bilingual(value) {
   return Object.fromEntries(['zh', 'en'].map(lang => [lang, typeof value?.[lang] === 'string' ? value[lang].trim().slice(0, 12000) : '']));
 }
 export function emptyDraft() {
-  return {...Object.fromEntries(textFields.map(key => [key, {zh: '', en: ''}])), year: null, destinationCoords: null, researchNotes: Array(13).fill(null), unansweredQuestions: []};
+  return {...Object.fromEntries(textFields.map(key => [key, {zh: '', en: ''}])), year: null, originCoords: null, destinationCoords: null, researchNotes: Array(13).fill(null), unansweredQuestions: []};
 }
 export function normalizeDraft(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('invalidProject');
@@ -24,10 +24,12 @@ export function normalizeDraft(input) {
   for (const field of textFields) draft[field] = bilingual(input[field]);
   draft.year = input.year === null || input.year === '' || input.year === undefined ? null : Number(input.year);
   if (draft.year !== null && (!Number.isInteger(draft.year) || draft.year < 1900 || draft.year > 2200)) throw new Error('invalidYear');
-  const coords = input.destinationCoords;
-  if (coords !== null && coords !== undefined) {
-    if (typeof coords.lat !== 'number' || typeof coords.lng !== 'number' || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng) || coords.lat < 18 || coords.lat > 53 || coords.lng < 73 || coords.lng > 135) throw new Error('invalidCoordinates');
-    draft.destinationCoords = {lat: coords.lat, lng: coords.lng};
+  for (const field of ['originCoords', 'destinationCoords']) {
+    const coords = input[field];
+    if (coords !== null && coords !== undefined) {
+      if (typeof coords.lat !== 'number' || typeof coords.lng !== 'number' || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng) || coords.lat < 18 || coords.lat > 53 || coords.lng < 73 || coords.lng > 135) throw new Error('invalidCoordinates');
+      draft[field] = {lat: coords.lat, lng: coords.lng};
+    }
   }
   if (Array.isArray(input.researchNotes)) draft.researchNotes = Array.from({length: 13}, (_, i) => input.researchNotes[i] ? bilingual(input.researchNotes[i]) : null);
   if (Array.isArray(input.unansweredQuestions)) draft.unansweredQuestions = input.unansweredQuestions.slice(0, 20).map(bilingual).filter(value => value.zh || value.en);

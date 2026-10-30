@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {getProjects, getStages} from '../src/js/data.js';
-import {localizeProject, emptyDraft} from '../src/js/project-schema.js';
+import {localizeProject, emptyDraft, escapeHTML} from '../src/js/project-schema.js';
 import {translate} from '../src/js/i18n.js';
 import {renderProjectMarkup} from '../src/js/project-view.js';
 import {inspectGLB} from '../src/js/glb.js';
@@ -10,11 +10,17 @@ import {inspectGLB} from '../src/js/glb.js';
 const render = (project, language = 'zh') => renderProjectMarkup(project, {t: key => translate(key, language), stages: getStages(language), index: 0, language});
 const fixture = () => localizeProject({...emptyDraft(), title: {zh: '有内容的项目', en: 'A project'}, destination: {zh: '敦煌', en: 'Dunhuang'}, cover: '', fieldPhotos: [], finalOutcomes: [null, null, null]}, 'zh');
 
-test('the four original projects show only their confirmed cover, title and destination', () => {
+test('cover-only projects hide empty sections while the complete Tulou journey shows its materials', () => {
   for (const language of ['zh', 'en']) for (const project of getProjects(language)) {
     const html = render(project, language);
-    assert.ok(html.includes(project.title) && html.includes(project.destination) && html.includes(project.cover));
-    assert.doesNotMatch(html, /class="(?:research|fieldwork|outcomes|ending)"|class="content-slot|placeholder|media-slot|待补充|待上传|To be added|Details to be added|model-viewer/);
+    assert.ok(html.includes(escapeHTML(project.title)) && html.includes(project.destination) && html.includes(project.cover));
+    if (project.id === 'tulou') {
+      assert.ok(html.includes('class="research"') && html.includes('class="fieldwork"') && html.includes('data-outcome="0"'));
+      assert.ok(html.includes(project.fieldPhotos[0].src) && html.includes('route-sketch'));
+      continue;
+    }
+    assert.doesNotMatch(html, /class="(?:research|outcomes|ending)"|class="content-slot|placeholder|media-slot|待补充|待上传|To be added|Details to be added|model-viewer/);
+    assert.equal(html.includes('route-sketch'), Boolean(project.origin));
     for (const field of ['explorers', 'year', 'theme', 'researchQuestion', 'journeyNote']) assert.ok(!html.includes(translate(field, language)));
   }
 });

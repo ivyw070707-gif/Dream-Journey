@@ -28,26 +28,37 @@ test('destination coordinates project onto the correct hemisphere', () => {
   }
 });
 
-test('only the four supplied covers and confirmed destinations are populated', () => {
-  const expected = [['tulou','漳州'],['suzhou','苏州'],['dunhuang','敦煌'],['miao-interview','贵阳']];
+test('supplied covers and confirmed destinations populate seven journeys', () => {
+  const expected = [['tulou','漳州'],['suzhou','苏州'],['dunhuang','敦煌'],['miao-interview','贵阳'],['tulou-journal','漳州'],['tulou-field-notes','漳州'],['tulou-report','漳州']];
   assert.deepEqual(getProjects('zh').map(p => [p.id,p.destination]), expected);
   for (const language of ['zh','en']) {
     for (const project of getProjects(language)) {
-      for (const field of ['researchQuestion','studentName','origin','theme','note','transport','fieldNotes']) assert.equal(project[field], '', `${project.id}.${field}`);
+      assert.equal(getStageNotes(language, project).length, getStages(language).length);
+      assert.ok(existsSync(new URL(`../${project.cover}`, import.meta.url)));
+      assert.ok(readFileSync(new URL(`../${project.cover}`, import.meta.url)).subarray(1,4).equals(Buffer.from('PNG')));
+      if (project.id === 'tulou') continue;
+      for (const field of ['researchQuestion','studentName','theme','note','transport','fieldNotes']) assert.equal(project[field], '', `${project.id}.${field}`);
       assert.equal(project.year, null);
       assert.deepEqual(project.fieldPhotos, []);
       assert.deepEqual(project.finalOutcomes, [null,null,null]);
       assert.deepEqual(project.unansweredQuestions, []);
-      assert.equal(getStageNotes(language, project).length, getStages(language).length);
       assert.ok(getStageNotes(language, project).every(note => note === ''));
-      assert.equal('originCoords' in project, false, 'No departure coordinates should be plotted');
-      assert.ok(existsSync(new URL(`../${project.cover}`, import.meta.url)));
-      assert.ok(readFileSync(new URL(`../${project.cover}`, import.meta.url)).subarray(1,4).equals(Buffer.from('PNG')));
+      if (project.destinationCoords.lng === 117.647) {
+        assert.ok(project.origin && project.originCoords, `${project.id} has a chosen departure`);
+      } else {
+        assert.equal(project.origin, '');
+        assert.equal('originCoords' in project, false);
+      }
     }
   }
+  const chinese = getProjects('zh');
+  assert.deepEqual(chinese.filter(project => ['tulou-journal', 'tulou-field-notes', 'tulou-report'].includes(project.id)).map(project => project.origin), ['杭州', '南昌', '长沙']);
+  const complete = chinese[0];
+  assert.equal(complete.studentName, '大鱼海棠小队');
+  assert.ok(complete.researchNotes.some(Boolean) && complete.fieldPhotos.length === 2 && complete.finalOutcomes[0].src.endsWith('.docx'));
 });
 
-test('both languages cover interface messages and all four cover labels', () => {
+test('both languages cover interface messages and all seven cover labels', () => {
   for (const [key, pair] of Object.entries(messages)) {
     assert.equal(pair.length, 2, key);
     pair.forEach(value => assert.ok(typeof value === 'string' && value.length > 0, key));
@@ -60,8 +71,8 @@ test('both languages cover interface messages and all four cover labels', () => 
   for (const code of ['invalidProject', 'invalidYear', 'invalidCoordinates', 'titleRequired', 'destinationRequired', 'fileCount', 'fileType', 'invalidFile', 'fileSize', 'textEncoding', 'imageRequired', 'unreadableFile', 'emptyFiles', 'agentTimeout', 'agentUnavailable', 'agentBusy', 'invalidAgentResponse', 'adminNotConfigured', 'unauthorized', 'agentNotConfigured', 'duplicateRole', 'connectionError', 'serverError', 'originNotAllowed', 'invalidRequest']) assert.ok(messages[`agentError_${code}`], code);
   for (const role of ['reference', 'cover', 'field', 'report', 'notebook', 'reflection']) assert.ok(messages[`agentRole_${role}`], role);
   const chinese = getProjects('zh'), english = getProjects('en');
-  assert.equal(chinese.length, 4);
-  for (let i = 0; i < 4; i++) {
+  assert.equal(chinese.length, 7);
+  for (let i = 0; i < chinese.length; i++) {
     assert.equal(chinese[i].id, english[i].id);
     assert.equal(chinese[i].cover, english[i].cover);
     assert.notEqual(chinese[i].title, english[i].title);

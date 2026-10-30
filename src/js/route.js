@@ -14,3 +14,57 @@ export function journeyRoute(project, t) {
     </svg><p class="route-caption">${t('routeNote')}</p>
   </div>`;
 }
+
+export function playJourneyRoutes(host, entries, {project}) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return {finished: Promise.resolve(true), cancel() {}};
+  let cancelled = false, settled = false, frame = 0, timer = 0, layer;
+  let finish;
+  const finished = new Promise(resolve => { finish = resolve; });
+  const complete = value => {
+    if (settled) return;
+    settled = true; cancelled = true;
+    cancelAnimationFrame(frame); clearTimeout(timer);
+    layer?.remove(); host.classList.remove('route-playing');
+    finish(value);
+  };
+  const start = () => {
+    if (cancelled) return;
+    const routes = entries.map(({project: journey}, index) => {
+      if (!journey.originCoords || !journey.destinationCoords) return null;
+      const from = project(journey.originCoords), to = project(journey.destinationCoords);
+      if (![from?.x, from?.y, to?.x, to?.y].every(Number.isFinite)) return null;
+      const dx = to.x - from.x, dy = to.y - from.y, distance = Math.hypot(dx, dy);
+      const bend = Math.min(120, Math.max(35, distance * 0.22)) * (index % 2 ? -1 : 1);
+      const cx = (from.x + to.x) / 2 - dy / (distance || 1) * bend;
+      const cy = (from.y + to.y) / 2 + dx / (distance || 1) * bend;
+      return {from, to, d: `M${from.x},${from.y} Q${cx},${cy} ${to.x},${to.y}`, color: /^#[\da-f]{6}$/i.test(journey.color) ? journey.color : '#a67d59'};
+    }).filter(Boolean);
+    if (!routes.length) { complete(true); return; }
+    layer = document.createElement('div'); layer.className = 'journey-route-playback';
+    layer.innerHTML = `<svg class="journey-route-svg" width="${host.clientWidth}" height="${host.clientHeight}" aria-hidden="true">${routes.map(route => `<path d="${route.d}" style="color:${route.color}"/><circle r="4" style="color:${route.color}"/>`).join('')}</svg>`;
+    host.append(layer); host.classList.add('route-playing');
+    const drawings = [...layer.querySelectorAll('path')].map((path, index) => {
+      const length = path.getTotalLength(), dot = layer.querySelectorAll('circle')[index];
+      path.style.strokeDasharray = `${length}`; path.style.strokeDashoffset = `${length}`;
+      return {path, dot, length, route: routes[index], delay: index * 130};
+    });
+    const duration = 1500, started = performance.now();
+    const tick = now => {
+      if (cancelled) return;
+      let done = true;
+      for (const drawing of drawings) {
+        const progress = Math.max(0, Math.min(1, (now - started - drawing.delay) / duration));
+        const eased = 1 - Math.pow(1 - progress, 3), point = drawing.path.getPointAtLength(drawing.length * eased);
+        drawing.path.style.strokeDashoffset = `${drawing.length * (1 - eased)}`;
+        drawing.dot.setAttribute('cx', point.x); drawing.dot.setAttribute('cy', point.y);
+        drawing.dot.style.opacity = progress > 0 && progress < 1 ? '1' : '0';
+        if (progress < 1) done = false;
+      }
+      if (done) { layer.classList.add('route-playback-complete'); timer = setTimeout(() => complete(true), 260); }
+      else frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+  };
+  frame = requestAnimationFrame(start);
+  return {finished, cancel: () => complete(false)};
+}

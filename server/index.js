@@ -96,7 +96,7 @@ export function createJourneyServer({env = process.env, fetchImpl = fetch, extra
         if (!['png', 'jpg', 'jpeg', 'webp'].includes(ext)) res.setHeader('Content-Disposition', 'attachment');
         res.writeHead(200); res.end(req.method === 'HEAD' ? undefined : data); return;
       }
-      if (!(route === '/' || route === '/index.html' || /^\/(src|assets|vendor)\//.test(route) || (env.NODE_ENV !== 'production' && route.startsWith('/tests/')))) throw new HttpError(404, 'notFound');
+      if (!(route === '/' || route === '/index.html' || /^\/(src|assets|vendor|sponsor-stars-plugin)\//.test(route) || (env.NODE_ENV !== 'production' && route.startsWith('/tests/')))) throw new HttpError(404, 'notFound');
       const filename = path.resolve(sourceRoot, `.${route === '/' ? '/index.html' : route}`);
       if (!filename.startsWith(sourceRoot) || route.includes('\\')) throw new HttpError(404, 'notFound');
       let data;

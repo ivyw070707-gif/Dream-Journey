@@ -6,6 +6,7 @@ import {loadPublishedProjects} from './project-api.js';
 import {createProjectAgent} from './project-agent.js';
 import {createAccount} from './account.js';
 import {coverImage, contentSlot, outcomeMarkup, renderProjectMarkup} from './project-view.js';
+import {playJourneyRoutes} from './route.js';
 
 const app = document.querySelector('#app'), dialog = document.querySelector('#viewer');
 const destinationGallery = document.querySelector('#destination-gallery');
@@ -15,7 +16,8 @@ try { storage = window.localStorage; } catch { /* Storage is optional. */ }
 let language = initialLocale(storage, navigator.language);
 let publishedProjects = [], projects = getProjects(language), stages = getStages(language);
 let active = 0, selected = null, globe = null, globeView, cleanup = () => {}, renderId = 0;
-let currentNav = 'explore', viewerState = null;
+let currentNav = 'explore', viewerState = null, routePlayback = null;
+let sponsorStars = null, sponsorHost = null, sponsorLayer = null, sponsorLoad = 0, sponsoredProjectIds = [];
 const t = key => translate(key, language);
 const number = i => String(i + 1).padStart(2, '0');
 
@@ -57,16 +59,55 @@ function openProjectAssistant() {
   else account.open({purpose: 'upload', afterLogin: () => projectAgent.open()});
 }
 
+function cancelRoutePlayback() { routePlayback?.cancel(); routePlayback = null; }
+function destroySponsorStars() {
+  sponsorLoad++; sponsorStars?.destroy(); sponsorStars = null; sponsorHost = null;
+  sponsorLayer?.remove(); sponsorLayer = null;
+}
+async function mountSponsorStars(host) {
+  if (account.getUser()?.role !== 'donor' || !host) { destroySponsorStars(); return; }
+  if (sponsorStars && sponsorHost === host) return;
+  destroySponsorStars(); const load = sponsorLoad;
+  await import('../../sponsor-stars-plugin/sponsor-stars.js');
+  if (load !== sponsorLoad || account.getUser()?.role !== 'donor' || !host.isConnected) return;
+  sponsorLayer = document.createElement('div'); sponsorLayer.className = 'sponsor-star-layer'; host.append(sponsorLayer);
+  sponsorHost = host;
+  sponsorStars = new window.SponsorStars({
+    mount: document.body, mapLayer: sponsorLayer, fundedProjectIds: sponsoredProjectIds,
+    bagImage: new URL('../../sponsor-stars-plugin/assets/star-bag.png', import.meta.url).href,
+    projects: mapEntries().map(({project, i}) => ({id: project.id, index: i, city: project.destination, focus: project.title, lat: project.destinationCoords.lat, lng: project.destinationCoords.lng})),
+    getProjectPoint: project => mapPoint(host, project),
+    onSelect: project => openDestination(project.index),
+    onFund: result => { sponsoredProjectIds = result.fundedProjectIds; }
+  });
+  sponsorStars.togglePanel(false);
+}
 function beginRender() {
-  renderId++;
+  renderId++; cancelRoutePlayback(); destroySponsorStars();
   if (globe) { globeView = globe.getView(); globe.dispose(); globe = null; }
   cleanup(); cleanup = () => {};
 }
 
+function sameDestination(a, b) {
+  return a.destination === b.destination || (a.destinationCoords && b.destinationCoords &&
+    Math.abs(a.destinationCoords.lat - b.destinationCoords.lat) < 0.001 && Math.abs(a.destinationCoords.lng - b.destinationCoords.lng) < 0.001);
+}
+function destinationEntries(index) {
+  const destination = projects[index];
+  return projects.map((project, i) => ({project, i})).filter(({project}) => sameDestination(project, destination));
+}
+function mapEntries() {
+  return projects.map((project, i) => ({project, i})).filter(({project, i}) => project.destinationCoords && projects.findIndex(candidate => sameDestination(candidate, project)) === i);
+}
+function mapPoint(host, point) {
+  if (globe) return globe.project(point);
+  const scale = Math.min(host.clientWidth / 750, host.clientHeight / 500);
+  return {x: (host.clientWidth - 750 * scale) / 2 + (point.lng - 65) * 10 * scale, y: (host.clientHeight - 500 * scale) / 2 + (60 - point.lat) * 10 * scale};
+}
 function globeMarkup() {
   return `<div class="globe" role="group" aria-label="${t('globeLabel')}">
     <canvas tabindex="0" aria-label="${t('globeLabel')}" aria-describedby="globe-help globe-keys"></canvas>
-    <div class="globe-markers">${projects.map((p, i) => p.destinationCoords ? `<button class="globe-marker ${i === active ? 'active' : ''}" data-i="${i}" aria-pressed="${i === active}" aria-label="${t('followJourney')}: ${esc(p.destination)}"><span class="marker-dot"></span><span class="marker-label">${esc(p.destination)}</span></button>` : '').join('')}</div>
+    <div class="globe-markers">${mapEntries().map(({project: p, i}) => `<button class="globe-marker ${sameDestination(p, projects[active]) ? 'active' : ''}" data-i="${i}" aria-pressed="${sameDestination(p, projects[active])}" aria-label="${t('followJourney')}: ${esc(p.destination)}"><span class="marker-dot"></span><span class="marker-label">${esc(p.destination)}</span></button>`).join('')}</div>
     <span class="globe-status" role="status">${t('loading')}</span>
     <div class="globe-controls"><button data-globe="in" aria-label="${t('zoomIn')}">+</button><button data-globe="out" aria-label="${t('zoomOut')}">−</button><button data-globe="reset" aria-label="${t('reset')}">⌂</button></div>
     <span class="globe-help" id="globe-help">${t('globeHelp')}</span><span class="sr-only" id="globe-keys">${t('globeKeys')}</span>
@@ -89,13 +130,11 @@ function renderMap() {
     host.classList.add('globe-fallback'); host.dataset.ready = 'fallback';
     host.querySelector('.globe-status').hidden = true;
     const positionMarkers = () => {
-      const scale = Math.min(host.clientWidth / 750, host.clientHeight / 500);
-      const left = (host.clientWidth - 750 * scale) / 2, top = (host.clientHeight - 500 * scale) / 2;
       host.querySelectorAll('.globe-marker').forEach(button => {
-        const i = Number(button.dataset.i), point = projects[i].destinationCoords;
+        const i = Number(button.dataset.i), point = mapPoint(host, projects[i].destinationCoords);
         button.hidden = false;
-        button.style.left = `${left + (point.lng - 65) * 10 * scale}px`;
-        button.style.top = `${top + (60 - point.lat) * 10 * scale}px`;
+        button.style.left = `${point.x}px`;
+        button.style.top = `${point.y}px`;
         button.style.setProperty('--label-x','12px'); button.style.setProperty('--label-y','0px');
         button.onclick = () => openDestination(i);
       });
@@ -107,49 +146,73 @@ function renderMap() {
   cleanup = () => flatObserver?.disconnect();
   import('./globe.js').then(({createGlobe}) => {
     if (thisRender !== renderId) return;
-    try { globe = createGlobe(host, {projects, active, view: globeView, onSelect: i => openDestination(i), onError: fallback}); }
+    try { globe = createGlobe(host, {projects, active, view: globeView, onError: fallback}); }
     catch { fallback(); }
   }).catch(fallback);
+  mountSponsorStars(host);
 
 }
 
 function updateSelection() {
   document.querySelectorAll('.globe-marker').forEach(element => {
-    const i = Number(element.dataset.i);
-    element.classList.toggle('active', i === active); element.setAttribute('aria-pressed', String(i === active));
+    const i = Number(element.dataset.i), isActive = sameDestination(projects[i], projects[active]);
+    element.classList.toggle('active', isActive); element.setAttribute('aria-pressed', String(isActive));
   });
   globe?.select(active);
-}
-function destinationEntries(index) {
-  const destination = projects[index];
-  return projects.map((project, i) => ({project, i})).filter(({project}) =>
-    project.destination === destination.destination || (project.destinationCoords && destination.destinationCoords &&
-    Math.abs(project.destinationCoords.lat - destination.destinationCoords.lat) < 0.001 && Math.abs(project.destinationCoords.lng - destination.destinationCoords.lng) < 0.001));
 }
 function openArchive({push = true} = {}) {
   galleryDestination = '*'; renderDestinationGallery(); document.body.classList.add('gallery-open');
   if (!destinationGallery.open) destinationGallery.showModal();
   if (push) history.pushState({}, '', '#journeys');
 }
-function openDestination(index, {push = true} = {}) {
-  active = index; updateSelection(); galleryDestination = projects[index].id;
+function centeredEntries(entries) {
+  const featured = entries.findIndex(({project}) => project.featured);
+  if (featured < 0) return entries;
+  const ordered = [...entries], [entry] = ordered.splice(featured, 1);
+  ordered.splice(Math.floor(ordered.length / 2), 0, entry);
+  return ordered;
+}
+function centerFeaturedPoster() {
+  requestAnimationFrame(() => {
+    if (!destinationGallery.open) return;
+    const container = destinationGallery.querySelector('.destination-posters'), featured = destinationGallery.querySelector('.destination-poster.featured');
+    if (!container || !featured) return;
+    const containerRect = container.getBoundingClientRect(), featuredRect = featured.getBoundingClientRect();
+    container.scrollLeft += featuredRect.left - containerRect.left - (container.clientWidth - featuredRect.width) / 2;
+  });
+}
+function openDestination(index, {push = true, animate = true} = {}) {
+  cancelRoutePlayback(); active = index; updateSelection(); galleryDestination = projects[index].id;
   galleryReturnFocus = document.querySelector(`.globe-marker[data-i="${index}"]`);
-  renderDestinationGallery();
-  document.body.classList.add('gallery-open');
-  if (!destinationGallery.open) destinationGallery.showModal();
-  if (push) history.pushState({}, '', `#gallery/${galleryDestination}`);
+  const destinationId = galleryDestination, thisRender = renderId;
+  const openGallery = () => {
+    renderDestinationGallery(); document.body.classList.add('gallery-open');
+    if (!destinationGallery.open) destinationGallery.showModal();
+    if (push) history.pushState({}, '', `#gallery/${destinationId}`);
+  };
+  if (!animate) { openGallery(); return; }
+  const host = document.querySelector('.globe');
+  const playback = playJourneyRoutes(host, destinationEntries(index), {
+    project: point => mapPoint(host, point)
+  });
+  routePlayback = playback;
+  playback.finished.then(completed => {
+    if (routePlayback === playback) routePlayback = null;
+    if (completed && thisRender === renderId && galleryDestination === destinationId) openGallery();
+  });
 }
 function renderDestinationGallery() {
   const all = galleryDestination === '*';
-  const entries = all ? projects.map((project, i) => ({project, i})) : destinationEntries(active);
+  const entries = centeredEntries(all ? projects.map((project, i) => ({project, i})) : destinationEntries(active));
   const place = projects[active], english = getProjects('en', publishedProjects)[active];
   destinationGallery.innerHTML = `<button class="gallery-close" aria-label="${t('backMap')}"><span>${t('backMap')}</span><i aria-hidden="true">×</i></button>
     <div class="destination-gallery-layout"><div class="gallery-editorial"><span class="gallery-folio">${all ? String(entries.length).padStart(2, '0') : number(active)} / ${t('destinationArchive')}</span><h2 id="destination-gallery-title">${all ? t('journeys') : esc(place.destination)}</h2>${all ? '' : `<span class="gallery-city-en">${esc(english.destination)}</span><div class="gallery-editorial-rule"></div><h3>${esc(place.title)}</h3><button class="gallery-project-link">${t('followJourney')} <span>↗</span></button>`}<p class="gallery-instruction">${t('posterInstruction')}</p></div>
-    <div class="destination-posters ${entries.length === 1 ? 'single-poster' : ''}" aria-label="${t('archive')}">${entries.map(({project, i}, n) => `<button class="destination-poster" data-project="${i}" aria-label="${t('followJourney')}: ${esc(project.title)}"><span class="poster-mount">${coverImage(project, 'eager')}</span><span class="poster-caption"><span>${String(n + 1).padStart(2, '0')} / ${String(entries.length).padStart(2, '0')}</span><span>${esc(project.title)}</span><span>↗</span></span></button>`).join('')}</div></div>`;
+    <div class="destination-posters ${entries.length === 1 ? 'single-poster' : ''}" aria-label="${t('archive')}">${entries.map(({project, i}, n) => `<button class="destination-poster ${project.featured ? 'featured' : ''}" data-project="${i}" aria-label="${t('followJourney')}: ${esc(project.title)}"><span class="poster-mount">${coverImage(project, 'eager')}</span><span class="poster-caption"><span>${String(n + 1).padStart(2, '0')} / ${String(entries.length).padStart(2, '0')}</span><span>${esc(project.title)}</span><span>↗</span></span></button>`).join('')}</div></div>`;
   destinationGallery.querySelector('.gallery-close').onclick = () => closeDestinationGallery();
   const projectLink = destinationGallery.querySelector('.gallery-project-link');
   if (projectLink) projectLink.onclick = () => openProject(active);
   destinationGallery.querySelectorAll('[data-project]').forEach(button => button.onclick = () => openProject(Number(button.dataset.project)));
+  centerFeaturedPoster();
 }
 function closeDestinationGallery({navigate = true} = {}) {
   galleryDestination = null; document.body.classList.remove('gallery-open');
@@ -269,10 +332,15 @@ document.querySelector('#impact').onclick = showIdea;
 const projectAgent = createProjectAgent({getLanguage: () => language, t, onPublished: project => {
   if (!publishedProjects.some(record => record.id === project.id)) publishedProjects.push(project);
   projects = getProjects(language, publishedProjects);
-  openProject(projects.findIndex(record => record.id === project.id));
+  active = Math.max(0, projects.findIndex(record => record.id === project.id));
+  goHome();
 }});
 let lastAccountId;
-const account = createAccount({t, onChange: user => { if (lastAccountId && lastAccountId !== user?.id) projectAgent.clear(); lastAccountId = user?.id; refreshAccountControls(); }});
+const account = createAccount({t, onChange: user => {
+  if (lastAccountId && lastAccountId !== user?.id) projectAgent.clear();
+  lastAccountId = user?.id; refreshAccountControls();
+  if (user?.role === 'donor') mountSponsorStars(document.querySelector('.globe')); else destroySponsorStars();
+}});
 document.querySelector('#new-project').onclick = openProjectAssistant;
 document.querySelectorAll('[data-language]').forEach(button => button.onclick = () => switchLanguage(button.dataset.language));
 function init() {
@@ -284,7 +352,7 @@ function init() {
     active = index; selected = projects[index]; renderProject(); window.scrollTo(0, 0);
   } else {
     currentNav = 'explore'; renderMap();
-    if (index >= 0 && match[1] === 'gallery') openDestination(index, {push:false});
+    if (index >= 0 && match[1] === 'gallery') openDestination(index, {push:false, animate:false});
     else if (location.hash === '#journeys') openArchive({push:false});
   }
 }
@@ -304,7 +372,7 @@ loadPublishedProjects().then(records => {
   if (requestedIndex >= 0 && selected?.id !== match[2]) {
     active = requestedIndex;
     if (match[1] === 'journey') { selected = projects[active]; renderProject(); }
-    else { renderMap(); openDestination(active, {push:false}); }
+    else { renderMap(); openDestination(active, {push:false, animate:false}); }
   } else if (!selected) {
     const position = window.scrollY; renderMap(); window.scrollTo({top: position, behavior: 'instant'});
     if (galleryDestination) renderDestinationGallery();
