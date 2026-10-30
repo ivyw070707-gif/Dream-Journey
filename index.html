@@ -1,1 +1,27 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f3f0e7"><title>去远方 Dream Journey — 每一个问题，都有想去的远方</title><meta name="description" content="一幅由孩子们的好奇心绘成的地图。从一个真实的问题出发，走进他们的研究、旅程与发现。"><link rel="stylesheet" href="style.css"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f3f0e7'/%3E%3Cpath d='M32 53V22M32 35Q8 34 15 12Q37 13 32 35M32 44Q56 42 51 22Q30 22 32 44' fill='%23778052'/%3E%3C/svg%3E"></head><body><header><button class="brand" id="home" aria-label="去远方首页"><svg class="brand-leaf" viewBox="0 0 35 46" aria-hidden="true"><path d="M17 42V15M17 28Q-2 28 5 5Q24 7 17 28M17 36Q36 34 30 15Q13 17 17 36" fill="#727b4d"/></svg><span>去远方<small>DREAM JOURNEY</small></span></button><nav aria-label="主导航"><button class="nav-active" id="explore">探索地图 <span>Explore</span></button><button id="journeys">旅程手稿 <span>Journeys</span></button><button id="impact">关于计划 <span>Our story ↗</span></button></nav><span class="header-note">让好奇心，走得更远。<i></i></span></header><main id="app"></main><dialog id="viewer" aria-label="档案作品查看器"><button class="close" aria-label="Close artifact viewer">关闭 <span>×</span></button><div id="viewer-content"></div></dialog><script type="module" src="app.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f3f0e7">
+  <title>去远方 — 好奇心的地图集</title>
+  <meta name="description" content="每一个问题，都有想去的远方。探索孩子们的好奇心、研究与发现。">
+  <link rel="stylesheet" href="src/styles/main.css">
+  <link rel="stylesheet" href="src/styles/journal.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f3f0e7'/%3E%3Cpath d='M32 53V22M32 35Q8 34 15 12Q37 13 32 35M32 44Q56 42 51 22Q30 22 32 44' fill='%23778052'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header>
+    <button class="brand" id="home" aria-label="去远方 / Dream Journey"><svg class="brand-leaf" viewBox="0 0 35 46" aria-hidden="true"><path d="M17 42V15M17 28Q-2 28 5 5Q24 7 17 28M17 36Q36 34 30 15Q13 17 17 36" fill="#727b4d"/></svg><span>去远方<small>DREAM JOURNEY</small></span></button>
+    <nav aria-label="主导航"><button id="explore">探索 ↗</button><button id="journeys">旅程</button><button id="impact">关于计划 ↗</button></nav>
+    <div class="header-tools"><span class="header-note">一点好奇，走向更大的世界。</span><div class="language-switch" role="group" aria-label="网站语言"><button data-language="zh" lang="zh-CN" aria-label="简体中文">中</button><span aria-hidden="true">/</span><button data-language="en" lang="en" aria-label="English">EN</button></div></div>
+  </header>
+  <main id="app"></main>
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <div class="language-switch viewer-language" role="group" aria-label="网站语言"><button data-language="zh" lang="zh-CN" aria-label="简体中文">中</button><span aria-hidden="true">/</span><button data-language="en" lang="en" aria-label="English">EN</button></div>
+    <button class="close" aria-label="关闭作品查看器">×</button><div id="viewer-content"></div>
+  </dialog>
+  <noscript>请开启 JavaScript 以探索旅程。 Please enable JavaScript to explore the journeys.</noscript>
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>

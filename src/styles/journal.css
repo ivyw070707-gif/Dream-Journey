@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* Keep the palette, brand and decorative artwork from the field-journal redesign. */
+:root{--paper:#f3f0e7;--paper-light:#faf7ee;--ink:#434a34;--muted:#778164;--olive:#68734d;--sage:#aab28a;--accent:#ac795c;--ochre:#c6a675;--line:#d9d9c8;--serif:'Noto Serif SC',Songti SC,STSong,serif;--english:'Cormorant Garamond',Georgia,serif;--sans:'DM Sans',PingFang SC,Microsoft YaHei,sans-serif}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body:after{opacity:.11}
+.brand{gap:12px;text-align:left}
+.brand-leaf{width:23px;height:35px;flex-shrink:0}
+.brand>span{font:600 24px/1.4 var(--serif);letter-spacing:5px}
+.brand small{display:block;border:0;padding:0;max-width:none;font:500 7px/1.8 var(--sans);letter-spacing:2.3px;margin-left:1px}
+.atlas-heading>p{font-family:var(--serif);font-size:23px;line-height:1.7;letter-spacing:1px}
+html[lang="en"] .atlas-heading>p{font-family:var(--english);font-size:27px;line-height:1.35;letter-spacing:0}
+.question-panel h2{font-family:var(--english);font-size:27px}
+.atlas-coda{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;gap:9%;margin:40px 5% 70px;border-top:1px solid var(--line);padding-top:30px}
+.landscape{display:block;width:100%;height:auto;overflow:visible}
+.coda-art{min-width:0}
+.atlas-coda h2{font:500 35px/1.6 var(--serif);margin:18px 0;letter-spacing:2px}
+html[lang="en"] .atlas-coda h2{font-family:var(--english);font-size:42px;line-height:1.2;letter-spacing:0}
+.atlas-coda p{font-size:11px;color:var(--muted);line-height:2.1;margin-bottom:22px}
+.atlas-coda .eyebrow{font-size:8px;letter-spacing:1.5px}
+.idea-art{width:100%}
+.idea-art .eyebrow{text-align:center;font-size:8px;line-height:1.8;color:var(--muted)}
+@media(max-width:900px){.atlas-heading>p{font-size:20px}.atlas-coda{gap:5%}.atlas-coda h2{font-size:29px}.atlas-coda p{font-size:10px}}
+@media(max-width:600px){
+  .brand{gap:8px}.brand-leaf{width:19px;height:31px}.brand>span{font-size:21px;letter-spacing:3px}
+  .brand small{display:block;font-size:5px;letter-spacing:1.6px}
+  .atlas-heading>p{font-size:18px}html[lang="en"] .atlas-heading>p{font-size:23px}
+  .atlas-coda{display:flex;flex-direction:column;gap:0;margin:25px 6% 45px;padding-top:15px}
+  .coda-art{width:100%}.atlas-coda>div:last-child{width:100%;padding:5px 8%}
+  .atlas-coda h2{font-size:29px}html[lang="en"] .atlas-coda h2{font-size:35px}
+}
