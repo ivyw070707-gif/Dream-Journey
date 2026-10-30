@@ -1,6 +1,6 @@
 # 去远方 / Dream Journey
 
-An interactive, bilingual atlas of children’s curiosity. Four supplied journey covers live on an interactive 3D globe, alongside a draggable cover archive and clearly marked spaces for research, fieldwork and outcomes. Only the covers, cover titles and user-confirmed destinations are populated; all other journey content remains empty.
+An interactive, bilingual atlas of children’s curiosity. Four supplied journey covers are discovered through an illustrated China map and destination poster galleries, with clearly marked spaces for research, fieldwork and outcomes. Only the covers, cover titles and user-confirmed destinations are populated; all other journey content remains empty.
 
 ## Preview and verify
 
@@ -39,7 +39,7 @@ tests/                      Node tests and interactive browser checks
 - The first screen contains only the **去远方** title and the interactive map. Navigation, introductory text, posters, project details and the footer stay off the entrance screen.
 - Click a destination marker to open its **poster gallery** over a blurred map. Only covers for that destination appear. The gallery preserves original cover aspect ratios; click a poster to enter its project.
 - Close the gallery with its return button, Escape, or the open backdrop. Browser Back from a project restores the corresponding gallery. Direct `#gallery/suzhou` and `#journey/suzhou` links work.
-- The existing Three.js globe still supports dragging and bounded zoom. When WebGL is unavailable, a map generated from the same Natural Earth geometry places all four destinations at their confirmed coordinates.
+- The entrance uses a floating, painterly China atlas generated from Natural Earth geometry. The four destination buttons use the confirmed coordinates. This map does not require WebGL; the earlier Three.js modules remain in the repository for future use.
 - Project pages keep bilingual navigation, artifact viewers, research constellation and empty slots for material not yet supplied. No student research content is invented.
 - Language switching is available after entering a project; the chosen language also applies to subsequent map galleries.
 

@@ -73,3 +73,70 @@ body.gallery-open{overflow:hidden}
 @keyframes gallery-arrive{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.atlas.atlas-entrance{min-height:420px}.atlas-entrance .entrance-title{top:9%;font-size:43px}.atlas-entrance .map-wrap{left:0;right:0;top:25%;bottom:10%}.atlas-entrance .globe-fallback .marker-label{font-size:12px}.atlas-entrance .marker-label{font-size:11px}#destination-gallery{padding:25px 6% 20px}.destination-gallery-header>div>span{font-size:8px;letter-spacing:1px}.destination-gallery-header h2{font-size:29px}.gallery-close{gap:12px}.gallery-close>span{font-size:10px}.destination-posters{padding-top:25px;padding-bottom:25px;gap:25px}.destination-poster{max-width:83vw}.poster-mount{padding:7px}.poster-mount .cover-image{max-height:56dvh}.poster-caption{gap:15px;margin-top:20px}.poster-caption strong{font-size:16px}.poster-caption small{font-size:8px}.poster-enter{font-size:9px;letter-spacing:0}.gallery-instruction{font-size:9px;letter-spacing:1px;margin-top:12px}}
 @media(prefers-reduced-motion:reduce){#destination-gallery[open]{animation:none}.destination-poster{transition:none}}
+
+/* Quiet atlas / a floating landscape on an open page. */
+body.atlas-only{background:#f5f1e7}
+body:after{opacity:.055}
+.atlas-entrance .entrance-title{left:7%;right:auto;top:30%;text-align:left;font-size:clamp(50px,5.3vw,82px);font-weight:400;letter-spacing:.16em;padding:0;line-height:1.6;color:#4d563a}
+.atlas-entrance .map-wrap{left:28%;right:3%;top:9%;bottom:9%}
+.atlas-entrance .globe-fallback{background-size:contain}
+.atlas-entrance .globe-fallback .globe-marker{width:44px;height:44px}
+.atlas-entrance .globe-fallback .marker-dot{left:17px;top:17px;width:10px;height:10px;border:2px solid #f5f1e7;background:#a67d59;box-shadow:0 0 0 5px #a67d5912}
+.atlas-entrance .globe-fallback .marker-label{left:37px;top:17px;font:400 13px/1 var(--serif);letter-spacing:2px;color:#586243;text-shadow:0 0 6px #f5f1e7,0 0 4px #f5f1e7}
+.atlas-entrance .globe-marker.active .marker-dot{background:#a67d59;box-shadow:0 0 0 5px #a67d5912}
+.atlas-entrance .globe-marker.active .marker-label{color:#586243}
+.atlas-entrance .globe-marker:hover .marker-label,.atlas-entrance .globe-marker:focus-visible .marker-label{color:#a06d4e}
+.atlas-entrance .globe-marker:hover .marker-dot,.atlas-entrance .globe-marker:focus-visible .marker-dot{box-shadow:0 0 0 10px #a67d5920}
+/* Destination gallery: an editorial label opposite a suspended original work. */
+#destination-gallery{padding:0;background:transparent}
+#destination-gallery[open]{display:block}
+#destination-gallery::backdrop{background:#eee9de99;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.destination-gallery-layout{display:grid;grid-template-columns:36% 64%;align-items:center;min-height:100dvh;padding:7vh 8%;gap:0}
+.gallery-editorial{padding:0 0 0 5%;align-self:center;position:relative;z-index:2}
+.gallery-folio{font:9px/1.8 var(--sans);letter-spacing:2px;color:#969b83}
+.gallery-editorial h2{font:400 clamp(42px,5vw,76px)/1.5 var(--serif);letter-spacing:.17em;margin:23px 0 0;color:#4c563b}
+.gallery-city-en{display:block;font:italic 28px/1.3 var(--english);color:#8e987b;letter-spacing:1px;margin-top:3px}
+.gallery-editorial-rule{height:1px;width:38px;background:#b5bea1;margin:35px 0}
+.gallery-editorial h3{font:400 16px/1.9 var(--serif);letter-spacing:2px;max-width:230px;margin:0 0 21px;color:#747d62}
+.gallery-project-link{font:11px/1.8 var(--sans);letter-spacing:1px;padding:0 0 9px;border-bottom:1px solid #a9b293;color:#5b6a46}
+.gallery-project-link>span{margin-left:38px;font-size:16px}
+.gallery-instruction{text-align:left;font:10px/1.9 var(--serif);letter-spacing:1px;color:#909b7f;margin:30px 0 0;max-width:215px}
+#destination-gallery .gallery-close{position:absolute;right:5%;top:5vh;z-index:5;gap:15px;color:#7f896d}
+.gallery-close>span{font:10px var(--sans);letter-spacing:1px}
+.gallery-close>i{display:grid;place-items:center;width:37px;height:37px;border:1px solid #bdc4ac;border-radius:50%;font:24px/1 var(--english);font-style:normal;transition:background .2s}
+.gallery-close:hover>i{background:#dce1d0}
+.destination-posters{display:flex;flex:initial;justify-content:flex-start;align-items:center;gap:50px;margin:0;padding:5vh 6% 4vh 10%;overflow:auto;min-width:0;min-height:0;max-height:94dvh}
+.destination-posters.single-poster{justify-content:center}
+.destination-poster{max-width:min(470px,100%);transform:rotate(-2deg);animation:poster-lift .65s cubic-bezier(.2,.7,.2,1) both}
+.destination-poster:nth-child(even){transform:rotate(2deg)}
+.poster-mount{padding:5px;background:#f7f3e8;box-shadow:7px 20px 40px #51553b20,1px 3px 7px #51553b16}
+.poster-mount .cover-image{max-height:66dvh;max-width:100%;width:auto;height:auto}
+.poster-caption{font:9px/1.6 var(--sans);gap:15px;margin:20px 4px 0;align-items:center;color:#899276;transform:rotate(2deg)}
+.poster-caption>span:first-child{font:9px var(--sans);white-space:nowrap;letter-spacing:1px;color:#9da58c}
+.poster-caption>span:nth-child(2){font:11px var(--serif);letter-spacing:1px}
+.poster-caption>span:last-child{font-size:17px;margin-left:auto}
+@keyframes poster-lift{from{opacity:0;transform:translateY(22px) rotate(0)}to{opacity:1;transform:translateY(0) rotate(-2deg)}}
+/* Retain the empty research framework, but let it read like pages of a journal. */
+.project-opening h1{color:#4b573b;letter-spacing:2px;font-weight:400}
+.project-opening .content-slot{border:0;border-bottom:1px solid #d2d7c3;padding:15px 0 18px;background:transparent}
+.project-facts{border-color:#d5dac8}
+.research{background:#e4e7d6;color:#4c5c3e}
+.research .section-heading>p{color:#899778}
+.research .section-heading .eyebrow{color:#8a9679}
+.constellation line{stroke:#a5b08e;stroke-dasharray:3 5}
+.star-node text{fill:#667653}
+.star-node .node-number{fill:#9aa58a}
+.star-node>path{stroke:#97a17c}
+.star-node>circle:not(.star-halo){fill:#a3ad88}
+.research .constellation-foot{border-color:#bec7ac;color:#879474}
+.fieldwork .media-slot,.outcomes .media-slot{border:1px dashed #bbc5a6;background:#e9ecdf55;color:#8f9c7c}
+.outcomes{background:#ebe8dd}
+.ending h2,.section-heading h2{font-weight:400;letter-spacing:2px;color:#586545}
+@media(max-width:900px){.atlas-entrance .entrance-title{left:7%;top:27%;font-size:55px}.atlas-entrance .map-wrap{left:24%;right:0;top:14%;bottom:8%}.destination-gallery-layout{grid-template-columns:33% 67%;padding:8vh 5%}.gallery-editorial{padding-left:4%}.gallery-editorial h2{font-size:48px}.gallery-city-en{font-size:25px}.gallery-editorial h3{font-size:14px}.destination-posters{padding-left:10%;padding-right:5%}.gallery-editorial-rule{margin:25px 0}.gallery-instruction{font-size:9px}.poster-mount .cover-image{max-height:62dvh}}
+@media(max-width:600px){.atlas-entrance .entrance-title{left:0;right:0;top:13%;text-align:center;font-size:49px;letter-spacing:.18em;padding-left:.18em}.atlas-entrance .map-wrap{left:-9%;right:-9%;top:31%;bottom:13%}.atlas-entrance .globe-fallback .marker-label{font-size:12px;letter-spacing:1px}#destination-gallery .gallery-close{top:22px;right:6%}.gallery-close>span{display:none}.gallery-close>i{width:35px;height:35px}.destination-gallery-layout{display:flex;flex-direction:column;justify-content:center;min-height:100dvh;padding:55px 7% 25px}.gallery-editorial{align-self:stretch;padding:0;display:grid;grid-template-columns:1fr auto;align-items:end;gap:0 15px}.gallery-folio{font-size:7px;grid-column:1/-1;letter-spacing:1.5px}.gallery-editorial h2{font-size:35px;letter-spacing:4px;margin:8px 0 0}.gallery-city-en{font-size:21px;grid-column:2;grid-row:2;text-align:right;padding-bottom:5px;margin:0}.gallery-editorial-rule,.gallery-editorial h3,.gallery-project-link,.gallery-instruction{display:none}.destination-posters{width:100%;max-height:none;flex:initial;padding:32px 3% 18px;overflow:visible;display:flex;margin:0;gap:30px}.destination-poster{max-width:100%}.poster-mount .cover-image{max-height:60dvh;max-width:100%}.poster-caption{font-size:8px;margin-top:16px;gap:12px}.poster-caption>span:nth-child(2){font-size:11px}.poster-caption>span:first-child{font-size:8px}.destination-posters:not(.single-poster){overflow-x:auto;padding-bottom:25px}.destination-posters:not(.single-poster) .destination-poster{flex:0 0 87%}}
+@media(prefers-reduced-motion:reduce){.destination-poster{animation:none}}
+html[lang="en"] .gallery-city-en{display:none}
+html[lang="en"] .gallery-editorial h2{font-family:var(--english);font-size:clamp(50px,7vw,92px);letter-spacing:.04em;line-height:1.1;margin-top:27px}
+html[lang="en"] .gallery-editorial h3{font-family:var(--english);font-size:22px;line-height:1.5;letter-spacing:0}
+html[lang="en"] .atlas-entrance .marker-label{letter-spacing:1px}
+@media(max-width:600px){html[lang="en"] .gallery-editorial h2{font-size:43px;grid-column:1/-1;margin-top:10px}}

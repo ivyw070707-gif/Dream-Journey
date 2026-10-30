@@ -56,13 +56,7 @@ function beginRender() {
 }
 
 function globeMarkup() {
-  return `<div class="globe" role="group" aria-label="${t('globeLabel')}">
-    <canvas tabindex="0" aria-label="${t('globeLabel')}" aria-describedby="globe-help globe-keys"></canvas>
-    <div class="globe-markers">${projects.map((p, i) => `<button class="globe-marker ${i === active ? 'active' : ''}" data-i="${i}" aria-pressed="${i === active}" aria-label="${t('followJourney')}: ${p.destination}"><span class="marker-dot"></span><span class="marker-label">${p.destination}</span></button>`).join('')}</div>
-    <span class="globe-status" role="status">${t('loading')}</span>
-    <div class="globe-controls"><button data-globe="in" aria-label="${t('zoomIn')}">+</button><button data-globe="out" aria-label="${t('zoomOut')}">−</button><button data-globe="reset" aria-label="${t('reset')}">⌂</button></div>
-    <span class="globe-help" id="globe-help">${t('globeHelp')}</span><span class="sr-only" id="globe-keys">${t('globeKeys')}</span>
-  </div>`;
+  return `<div class="globe" role="group" aria-label="${t('globeLabel')}"><div class="globe-markers">${projects.map((p,i)=>`<button class="globe-marker ${i===active?'active':''}" data-i="${i}" aria-pressed="${i===active}" aria-label="${t('followJourney')}: ${p.destination}"><span class="marker-dot"></span><span class="marker-label">${p.destination}</span></button>`).join('')}</div><span class="globe-status" role="status" hidden></span></div>`;
 }
 
 function renderMap() {
@@ -94,11 +88,8 @@ function renderMap() {
   // Bind immediately, including while WebGL and geography load.
   host.querySelectorAll('.globe-marker').forEach((button, i) => button.onclick = () => openDestination(i));
   cleanup = () => flatObserver?.disconnect();
-  import('./globe.js').then(({createGlobe}) => {
-    if (thisRender !== renderId) return;
-    try { globe = createGlobe(host, {projects, active, view: globeView, onSelect: i => openDestination(i), onError: fallback}); }
-    catch { fallback(); }
-  }).catch(fallback);
+  fallback();
+
 }
 
 function updateSelection() {
@@ -121,13 +112,15 @@ function openDestination(index, {push = true} = {}) {
   if (push) history.pushState({}, '', `#gallery/${galleryDestination}`);
 }
 function renderDestinationGallery() {
-  const entries = destinationEntries(active);
-  destinationGallery.innerHTML = `<div class="destination-gallery-header"><div><span>${t('destinationArchive')}</span><h2 id="destination-gallery-title">${projects[active].destination}</h2></div><button class="gallery-close" aria-label="${t('backMap')}"><span>${t('backMap')}</span> ×</button></div>
-    <div class="destination-posters ${entries.length === 1 ? 'single-poster' : ''}" aria-label="${t('archive')}">${entries.map(({project, i}) => `<button class="destination-poster" data-project="${i}" aria-label="${t('followJourney')}: ${project.title}"><span class="poster-mount">${coverImage(project, 'eager')}</span><span class="poster-caption"><span><small>${project.destination}</small><strong>${project.title}</strong></span><span class="poster-enter">${t('followJourney')} ↗</span></span></button>`).join('')}</div>
-    <p class="gallery-instruction">${t('posterInstruction')}</p>`;
+  const entries = destinationEntries(active), place = projects[active], english = getProjects('en')[active];
+  destinationGallery.innerHTML = `<button class="gallery-close" aria-label="${t('backMap')}"><span>${t('backMap')}</span><i aria-hidden="true">×</i></button>
+    <div class="destination-gallery-layout"><div class="gallery-editorial"><span class="gallery-folio">${number(active)} / ${t('destinationArchive')}</span><h2 id="destination-gallery-title">${place.destination}</h2><span class="gallery-city-en">${english.destination}</span><div class="gallery-editorial-rule"></div><h3>${place.title}</h3><button class="gallery-project-link">${t('followJourney')} <span>↗</span></button><p class="gallery-instruction">${t('posterInstruction')}</p></div>
+    <div class="destination-posters ${entries.length === 1 ? 'single-poster' : ''}" aria-label="${t('archive')}">${entries.map(({project, i}, n) => `<button class="destination-poster" data-project="${i}" aria-label="${t('followJourney')}: ${project.title}"><span class="poster-mount">${coverImage(project, 'eager')}</span><span class="poster-caption"><span>${String(n+1).padStart(2,'0')} / ${String(entries.length).padStart(2,'0')}</span><span>${project.title}</span><span>↗</span></span></button>`).join('')}</div></div>`;
   destinationGallery.querySelector('.gallery-close').onclick = () => closeDestinationGallery();
+  destinationGallery.querySelector('.gallery-project-link').onclick = () => openProject(active);
   destinationGallery.querySelectorAll('[data-project]').forEach(button => button.onclick = () => openProject(Number(button.dataset.project)));
 }
+
 function closeDestinationGallery({navigate = true} = {}) {
   galleryDestination = null; document.body.classList.remove('gallery-open');
   if (destinationGallery.open) destinationGallery.close();
@@ -138,7 +131,7 @@ function closeDestinationGallery({navigate = true} = {}) {
   galleryReturnFocus?.focus({preventScroll:true});
 }
 destinationGallery.addEventListener('cancel', event => { event.preventDefault(); closeDestinationGallery(); });
-destinationGallery.addEventListener('click', event => { if (event.target === destinationGallery) closeDestinationGallery(); });
+destinationGallery.addEventListener('click', event => { if (event.target === destinationGallery || event.target.classList.contains('destination-gallery-layout') || event.target.classList.contains('destination-posters')) closeDestinationGallery(); });
 
 const positions = [[65,210],[165,140],[235,55],[288,191],[340,300],[410,112],[477,222],[550,74],[617,171],[687,277],[760,130],[830,224],[924,110]];
 const edges = [[0,1],[1,2],[1,3],[2,4],[4,5],[3,5],[5,6],[6,7],[7,8],[8,9],[8,10],[9,11],[10,11],[11,12]];

@@ -9,7 +9,7 @@ export const messages = {
   hero: ['每一个问题，<br>都有想去的远方。', 'Every question has<br>somewhere to go.'],
   intro: ['从一个问题开始，走向更大的世界。', 'A small question. A world waiting to be discovered.'],
   mapCaption: ['中国 / 四段旅程的目的地', 'CHINA / FOUR JOURNEY DESTINATIONS'],
-  globeLabel: ['可交互的中国旅程 3D 地球', 'Interactive 3D globe of journeys in China'],
+  globeLabel: ['中国旅程地图，选择目的地查看海报', 'Journey map of China: choose a destination to view its posters'],
   globeHelp: ['拖动探索中国 · 滚轮 / 双指缩放', 'Drag across China · Scroll / pinch to zoom'],
   globeKeys: ['方向键移动，+ / − 缩放，Home 复位', 'Arrow keys to move, + / − to zoom, Home to reset'],
   zoomIn: ['放大地球', 'Zoom in'], zoomOut: ['缩小地球', 'Zoom out'], reset: ['回到中国全景', 'Reset China view'],

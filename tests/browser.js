@@ -25,7 +25,7 @@ document.querySelector('#run').onclick = async () => {
       await wait(100); check(Number(doc.querySelector('.globe').dataset.longitude) === 135, '3D navigation stays bounded to China');
       doc.querySelector('[data-globe="reset"]').click();
     } else {
-      check(win.getComputedStyle(doc.querySelector('.globe')).backgroundImage.includes('china-preview.svg'), 'Published geographic map is visible when WebGL is unavailable');
+      check(win.getComputedStyle(doc.querySelector('.globe')).backgroundImage.includes('china-preview.svg'), 'Illustrated geographic map is visible without WebGL');
     }
     for (const [index, project] of getProjects(doc.documentElement.lang === 'en' ? 'en' : 'zh').entries()) {
       const marker = doc.querySelector(`.globe-marker[data-i="${index}"]`);
