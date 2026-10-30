@@ -1,1 +1,25 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f1e9"><title>去远方 — An atlas of curiosity</title><meta name="description" content="Every question has a destination. Explore a living atlas of student curiosity, research and discovery."><link rel="stylesheet" href="style.css"></head><body><header><button class="brand" id="home"><span>去远方</span><small>DREAM JOURNEY</small></button><nav><button class="nav-active" id="explore">Explore <sup>↗</sup></button><button id="journeys">Journeys</button><button id="impact">The idea <sup>↗</sup></button></nav><span class="header-note">A LITTLE CURIOSITY. A WIDER WORLD.</span></header><main id="app"></main><dialog id="viewer"><button class="close" aria-label="Close artifact viewer">×</button><div id="viewer-content"></div></dialog><script type="module" src="app.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1e9">
+  <title>去远方 — 好奇心的地图集</title>
+  <meta name="description" content="每一个问题，都有想去的远方。探索孩子们的好奇心、研究与发现。">
+  <link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+  <header>
+    <button class="brand" id="home" aria-label="去远方 / Dream Journey"><span>去远方</span><small>DREAM JOURNEY</small></button>
+    <nav aria-label="主导航"><button id="explore">探索 ↗</button><button id="journeys">旅程</button><button id="impact">关于计划 ↗</button></nav>
+    <div class="header-tools"><span class="header-note">一点好奇，走向更大的世界。</span><div class="language-switch" role="group" aria-label="网站语言"><button data-language="zh" lang="zh-CN" aria-label="简体中文">中</button><span aria-hidden="true">/</span><button data-language="en" lang="en" aria-label="English">EN</button></div></div>
+  </header>
+  <main id="app"></main>
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <div class="language-switch viewer-language" role="group" aria-label="网站语言"><button data-language="zh" lang="zh-CN" aria-label="简体中文">中</button><span aria-hidden="true">/</span><button data-language="en" lang="en" aria-label="English">EN</button></div>
+    <button class="close" aria-label="关闭作品查看器">×</button><div id="viewer-content"></div>
+  </dialog>
+  <noscript>请开启 JavaScript 以探索旅程。 Please enable JavaScript to explore the journeys.</noscript>
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>
